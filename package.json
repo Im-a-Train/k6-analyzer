@@ -1,0 +1,24 @@
+{
+    "name": "k6-analyzer",
+    "version": "1.0.0",
+    "description": "Visualize and analyze k6 test results",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "node index.js"
+    },
+    "keywords": [
+        "k6",
+        "load-testing",
+        "visualization",
+        "performance-testing"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+        "express": "^4.18.2",
+        "cors": "^2.8.5",
+        "multer": "^1.4.5-lts.1"
+    },
+    "devDependencies": {}
+}

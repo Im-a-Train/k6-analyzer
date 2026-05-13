@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>K6 Test Results Analyzer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🚀 K6 Test Results Analyzer</h1>
+      <p>Upload and visualize your k6 load test results</p>
+    </header>
+
+    <main>
+      <input type="file" id="fileInput" accept=".json" class="visually-hidden" title="Upload k6 results JSON file">
+
+      <!-- Progress Bar -->
+      <div class="progress-container hidden-with-margin" id="progressContainer">
+        <div class="progress-label">
+          <span id="progressText">Uploading...</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <section class="results-section" id="resultsSection">
+        <div class="results-header">
+          <h2 id="resultsMainTitle">Test Results</h2>
+          <div class="results-toolbar">
+            <label class="toolbar-toggle" for="compareModeToggle">
+              <input type="checkbox" id="compareModeToggle">
+              <span>Compare A/B</span>
+            </label>
+            <button class="btn btn-secondary" id="resetResultsBtn" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div class="run-compare-grid" id="metricsCompareGrid">
+          <section class="run-metrics-panel" id="metricsPanelA">
+            <div class="run-result-header" id="runResultHeaderA">
+              <div>
+                <h3 class="run-panel-title" id="runHeaderTitleA">Test Results</h3>
+                <p class="run-panel-subtitle" id="runHeaderRangeA"></p>
+              </div>
+              <div class="run-header-actions">
+                <button class="btn btn-secondary" id="uploadRunBtnA" type="button">Upload Run A</button>
+                <label class="toolbar-toggle hidden" id="coupleSettingsWrapA" for="coupleSettingsToggleA">
+                  <input type="checkbox" id="coupleSettingsToggleA" checked>
+                  <span>Couple Settings</span>
+                </label>
+              </div>
+            </div>
+            <div class="metrics-grid">
+            <div class="metric-card">
+              <h3>Total Requests</h3>
+              <p class="metric-value" id="metricRequests">-</p>
+              <span class="metric-unit">requests</span>
+            </div>
+
+            <div class="metric-card">
+              <h3>Checks</h3>
+              <div class="check-stats">
+                <span class="check-passed" id="checksPassed">0</span>
+                <span class="check-separator">/</span>
+                <span class="check-total" id="checksTotal">0</span>
+              </div>
+              <span class="metric-unit">passed/total</span>
+            </div>
+
+            <div class="metric-card">
+              <h3>Response Time (min)</h3>
+              <p class="metric-value" id="metricMinDuration">-</p>
+              <span class="metric-unit">milliseconds</span>
+            </div>
+
+            <div class="metric-card">
+              <h3>Response Time (max)</h3>
+              <p class="metric-value" id="metricMaxDuration">-</p>
+              <span class="metric-unit">milliseconds</span>
+            </div>
+
+            <div class="metric-card">
+              <h3>Data Received</h3>
+              <p class="metric-value" id="metricDataReceived">-</p>
+              <span class="metric-unit">bytes</span>
+            </div>
+
+            <div class="metric-card">
+              <h3>Data Sent</h3>
+              <p class="metric-value" id="metricDataSent">-</p>
+              <span class="metric-unit">bytes</span>
+            </div>
+
+            <div class="metric-card">
+              <h3>Iteration Duration (avg)</h3>
+              <p class="metric-value" id="metricIterationAvg">-</p>
+              <span class="metric-unit">milliseconds</span>
+            </div>
+            </div>
+          </section>
+
+          <section class="run-metrics-panel hidden" id="metricsPanelB">
+            <div class="run-result-header" id="runResultHeaderB">
+              <div>
+                <h3 class="run-panel-title" id="runHeaderTitleB">Run B</h3>
+                <p class="run-panel-subtitle" id="runHeaderRangeB"></p>
+              </div>
+              <div class="run-header-actions">
+                <button class="btn btn-secondary" id="uploadRunBtnB" type="button">Upload Run B</button>
+                <label class="toolbar-toggle hidden" id="coupleSettingsWrapB" for="coupleSettingsToggleB">
+                  <input type="checkbox" id="coupleSettingsToggleB" checked>
+                  <span>Couple Settings</span>
+                </label>
+              </div>
+            </div>
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <h3>Total Requests</h3>
+                <p class="metric-value" id="metricRequestsB">-</p>
+                <span class="metric-unit">requests</span>
+              </div>
+
+              <div class="metric-card">
+                <h3>Checks</h3>
+                <div class="check-stats">
+                  <span class="check-passed" id="checksPassedB">0</span>
+                  <span class="check-separator">/</span>
+                  <span class="check-total" id="checksTotalB">0</span>
+                </div>
+                <span class="metric-unit">passed/total</span>
+              </div>
+
+              <div class="metric-card">
+                <h3>Response Time (min)</h3>
+                <p class="metric-value" id="metricMinDurationB">-</p>
+                <span class="metric-unit">milliseconds</span>
+              </div>
+
+              <div class="metric-card">
+                <h3>Response Time (max)</h3>
+                <p class="metric-value" id="metricMaxDurationB">-</p>
+                <span class="metric-unit">milliseconds</span>
+              </div>
+
+              <div class="metric-card">
+                <h3>Data Received</h3>
+                <p class="metric-value" id="metricDataReceivedB">-</p>
+                <span class="metric-unit">bytes</span>
+              </div>
+
+              <div class="metric-card">
+                <h3>Data Sent</h3>
+                <p class="metric-value" id="metricDataSentB">-</p>
+                <span class="metric-unit">bytes</span>
+              </div>
+
+              <div class="metric-card">
+                <h3>Iteration Duration (avg)</h3>
+                <p class="metric-value" id="metricIterationAvgB">-</p>
+                <span class="metric-unit">milliseconds</span>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="run-compare-grid" id="chartsCompareGrid">
+        <section class="charts-section" id="chartsSectionA">
+          <h2>Performance Charts (Run A)</h2>
+
+          <div class="metric-presets" id="metricPresets">
+            <button class="metric-preset-btn active" type="button" data-preset="load">Load</button>
+            <button class="metric-preset-btn" type="button" data-preset="errors">Errors</button>
+            <button class="metric-preset-btn" type="button" data-preset="latency">Latency</button>
+            <button class="metric-preset-btn" type="button" data-preset="all">All</button>
+          </div>
+
+          <div class="metric-selectors" id="metricSelectors">
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="vus" checked>
+              <span>Virtual Users</span>
+              <select class="metric-axis-select" data-metric="vus" aria-label="Axis for Virtual Users">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="requests" checked>
+              <span>Requests</span>
+              <select class="metric-axis-select" data-metric="requests" aria-label="Axis for Requests">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="failedRequests" checked>
+              <span>Failed Requests</span>
+              <select class="metric-axis-select" data-metric="failedRequests" aria-label="Axis for Failed Requests">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="iterations">
+              <span>Iterations</span>
+              <select class="metric-axis-select" data-metric="iterations" aria-label="Axis for Iterations">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="responseTimeAvg">
+              <span>Response Time (avg ms)</span>
+              <select class="metric-axis-select" data-metric="responseTimeAvg" aria-label="Axis for Response Time">
+                <option value="y">Left</option>
+                <option value="y1" selected>Right</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Chart Type Toggle -->
+          <div class="chart-controls">
+            <div class="chart-toggle" id="chartToggleA">
+              <button class="chart-type-btn active" data-view="overall">Overall</button>
+              <button class="chart-type-btn" data-view="byScenario">By Scenario</button>
+            </div>
+
+            <div class="granularity-control">
+              <label for="granularityInput">Granularity</label>
+              <input type="text" id="granularityInput" value="1s" aria-label="Chart granularity" placeholder="e.g. 1s, 30s, 2m">
+              <button class="btn btn-secondary" id="applyGranularityBtn" type="button">Apply</button>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="chartA"></canvas>
+          </div>
+          <div id="scenarioLegendA" class="scenario-legend hidden"></div>
+
+          <article class="scenario-error-card">
+            <div class="endpoint-list-header">
+              <h3>HTTP Errors By Scenario</h3>
+              <p>Shows aggregated failed HTTP requests grouped per scenario.</p>
+            </div>
+            <div class="scenario-error-list" id="scenarioErrorListA"></div>
+          </article>
+        </section>
+
+        <section class="charts-section hidden" id="chartsSectionB">
+          <h2>Performance Charts (Run B)</h2>
+
+          <div class="metric-presets" id="metricPresetsB">
+            <button class="metric-preset-btn active" type="button" data-preset="load">Load</button>
+            <button class="metric-preset-btn" type="button" data-preset="errors">Errors</button>
+            <button class="metric-preset-btn" type="button" data-preset="latency">Latency</button>
+            <button class="metric-preset-btn" type="button" data-preset="all">All</button>
+          </div>
+
+          <div class="metric-selectors" id="metricSelectorsB">
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="vus" checked>
+              <span>Virtual Users</span>
+              <select class="metric-axis-select" data-metric="vus" aria-label="Axis for Virtual Users B">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="requests" checked>
+              <span>Requests</span>
+              <select class="metric-axis-select" data-metric="requests" aria-label="Axis for Requests B">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="failedRequests" checked>
+              <span>Failed Requests</span>
+              <select class="metric-axis-select" data-metric="failedRequests" aria-label="Axis for Failed Requests B">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="iterations">
+              <span>Iterations</span>
+              <select class="metric-axis-select" data-metric="iterations" aria-label="Axis for Iterations B">
+                <option value="y" selected>Left</option>
+                <option value="y1">Right</option>
+              </select>
+            </label>
+            <label class="metric-selector-item">
+              <input type="checkbox" class="metric-checkbox" value="responseTimeAvg">
+              <span>Response Time (avg ms)</span>
+              <select class="metric-axis-select" data-metric="responseTimeAvg" aria-label="Axis for Response Time B">
+                <option value="y">Left</option>
+                <option value="y1" selected>Right</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="chart-controls">
+            <div class="chart-toggle" id="chartToggleB">
+              <button class="chart-type-btn active" data-view="overall">Overall</button>
+              <button class="chart-type-btn" data-view="byScenario">By Scenario</button>
+            </div>
+
+            <div class="granularity-control">
+              <label for="granularityInputB">Granularity</label>
+              <input type="text" id="granularityInputB" value="1s" aria-label="Chart granularity B" placeholder="e.g. 1s, 30s, 2m">
+              <button class="btn btn-secondary" id="applyGranularityBtnB" type="button">Apply</button>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="chartB"></canvas>
+          </div>
+          <div id="scenarioLegendB" class="scenario-legend hidden"></div>
+
+          <article class="scenario-error-card">
+            <div class="endpoint-list-header">
+              <h3>HTTP Errors By Scenario</h3>
+              <p>Shows aggregated failed HTTP requests grouped per scenario.</p>
+            </div>
+            <div class="scenario-error-list" id="scenarioErrorListB"></div>
+          </article>
+        </section>
+        </div>
+
+        <div class="run-compare-grid" id="endpointCompareGrid">
+        <section class="endpoint-section" id="endpointSection">
+          <div class="endpoint-section-header">
+            <h2>Endpoint Breakdown (Run A)</h2>
+            <p>Requests and duration percentiles are shown separately per endpoint.</p>
+          </div>
+
+          <div class="endpoint-chart-grid">
+            <article class="endpoint-chart-card">
+              <h3>Requests by Endpoint</h3>
+              <div class="endpoint-chart-container">
+                <canvas id="endpointRequestsChart"></canvas>
+              </div>
+            </article>
+
+            <article class="endpoint-chart-card">
+              <h3>Response Time by Endpoint</h3>
+              <div class="endpoint-chart-container">
+                <canvas id="endpointDurationChart"></canvas>
+              </div>
+            </article>
+          </div>
+
+          <article class="endpoint-list-card">
+            <div class="endpoint-list-header">
+              <h3>Endpoint Summary</h3>
+              <p>Compact paths are shown here. Click an endpoint to expand its failed HTTPS status breakdown.</p>
+            </div>
+            <div class="endpoint-summary-controls">
+              <label for="endpointSortSelect">Order By</label>
+              <select id="endpointSortSelect" aria-label="Endpoint summary order">
+                <option value="requests" selected>Requests</option>
+                <option value="avg">AVG</option>
+                <option value="p95">P95</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div class="endpoint-list" id="endpointList"></div>
+          </article>
+        </section>
+
+        <section class="endpoint-section hidden" id="endpointSectionB">
+          <div class="endpoint-section-header">
+            <h2>Endpoint Breakdown (Run B)</h2>
+            <p>Requests and duration percentiles are shown separately per endpoint.</p>
+          </div>
+
+          <div class="endpoint-chart-grid">
+            <article class="endpoint-chart-card">
+              <h3>Requests by Endpoint</h3>
+              <div class="endpoint-chart-container">
+                <canvas id="endpointRequestsChartB"></canvas>
+              </div>
+            </article>
+
+            <article class="endpoint-chart-card">
+              <h3>Response Time by Endpoint</h3>
+              <div class="endpoint-chart-container">
+                <canvas id="endpointDurationChartB"></canvas>
+              </div>
+            </article>
+          </div>
+
+          <article class="endpoint-list-card">
+            <div class="endpoint-list-header">
+              <h3>Endpoint Summary</h3>
+              <p>Compact paths are shown here. Click an endpoint to expand its failed HTTPS status breakdown.</p>
+            </div>
+            <div class="endpoint-summary-controls">
+              <label for="endpointSortSelectB">Order By</label>
+              <select id="endpointSortSelectB" aria-label="Endpoint summary order for run b">
+                <option value="requests" selected>Requests</option>
+                <option value="avg">AVG</option>
+                <option value="p95">P95</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div class="endpoint-list" id="endpointListB"></div>
+          </article>
+        </section>
+        </div>
+
+      </section>
+
+      <!-- Loading State -->
+      <div class="loading hidden" id="loading">
+        <p>Processing your file...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error hidden" id="error">
+        <p id="errorText"></p>
+      </div>
+    </main>
+
+    <footer>
+      <p>K6 Analyzer v1.0 | <a href="https://k6.io" target="_blank" rel="noopener noreferrer">Learn more about K6</a></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
