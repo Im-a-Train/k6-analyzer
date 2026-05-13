@@ -1,3 +1,23 @@
+import { parseGranularityToMs, normalizeGranularity } from './js/granularity.js';
+import {
+  formatTimeLabel,
+  formatBytes,
+  formatNumberCompact,
+  formatDurationCompact,
+  truncateMiddle,
+  truncateFromFront
+} from './js/format-utils.js';
+import {
+  aggregateSeries,
+  aggregateByScenario,
+  createDataset,
+  collectSortedTimestampsFromSeries,
+  collectSortedTimestampsFromByScenario,
+  generateColors
+} from './js/chart-utils.js';
+import { uploadResultsFile, fetchRunData } from './js/api-client.js';
+import { getRunUiConfig } from './js/run-config.js';
+
 // DOM Elements
 const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
@@ -115,6 +135,7 @@ const charts = {
 };
 
 let pendingUploadTarget = 'a';
+let isAppInitialized = false;
 
 function cloneSettings(settings) {
   return {
@@ -485,13 +506,8 @@ async function handleFileUpload(file, runKey) {
   progressPercent.textContent = '5%';
   progressText.textContent = `Preparing upload for Run ${runKey.toUpperCase()}...`;
 
-  const formData = new FormData();
-  formData.append('file', file);
-
   try {
-    const xhr = new XMLHttpRequest();
-
-    xhr.upload.addEventListener('progress', (e) => {
+    await uploadResultsFile(file, (e) => {
       if (!e.lengthComputable) return;
       const percentComplete = (e.loaded / e.total) * 90 + 5;
       progressFill.style.width = `${percentComplete}%`;
@@ -499,45 +515,16 @@ async function handleFileUpload(file, runKey) {
       progressText.textContent = `Uploading... ${(e.loaded / 1024 / 1024).toFixed(1)}MB`;
     });
 
-    xhr.addEventListener('load', async () => {
-      progressFill.style.width = '100%';
-      progressPercent.textContent = '100%';
-      progressText.textContent = 'Processing...';
+    progressFill.style.width = '100%';
+    progressPercent.textContent = '100%';
+    progressText.textContent = 'Processing...';
 
-      if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          await loadResultsForRun(runKey);
-          hideError();
-        } catch (err) {
-          showError(err.message);
-        }
-      } else {
-        let data = null;
-        try {
-          data = JSON.parse(xhr.responseText);
-        } catch (parseError) {
-          data = null;
-        }
+    await loadResultsForRun(runKey);
+    hideError();
 
-        const fallbackMessage = xhr.status === 413
-          ? 'File too large for current server upload limit.'
-          : `Upload failed (HTTP ${xhr.status})`;
-
-        showError((data && data.error) || fallbackMessage);
-      }
-
-      setTimeout(() => {
-        progressContainer.style.display = 'none';
-      }, 250);
-    });
-
-    xhr.addEventListener('error', () => {
-      showError('Upload failed');
+    setTimeout(() => {
       progressContainer.style.display = 'none';
-    });
-
-    xhr.open('POST', '/api/upload');
-    xhr.send(formData);
+    }, 250);
   } catch (err) {
     showError(err.message);
     progressContainer.style.display = 'none';
@@ -545,20 +532,13 @@ async function handleFileUpload(file, runKey) {
 }
 
 async function loadResultsForRun(runKey) {
-  const metricsResponse = await fetch('/api/metrics');
-  if (!metricsResponse.ok) throw new Error('Failed to load metrics');
-
-  const timeseriesResponse = await fetch('/api/timeseries');
-  if (!timeseriesResponse.ok) throw new Error('Failed to load timeseries data');
-
-  const endpointResponse = await fetch('/api/endpoints');
-  if (!endpointResponse.ok) throw new Error('Failed to load endpoint data');
+  const runData = await fetchRunData();
 
   runStore[runKey] = {
     loaded: true,
-    metrics: await metricsResponse.json(),
-    timeseries: await timeseriesResponse.json(),
-    endpoints: await endpointResponse.json()
+    metrics: runData.metrics,
+    timeseries: runData.timeseries,
+    endpoints: runData.endpoints
   };
 
   if (!runStore.a.loaded && runStore.b.loaded) {
@@ -599,46 +579,6 @@ function updateCompareVisibility() {
   updateResultsHeaderText(showB);
 }
 
-function parseGranularityParts(value) {
-  if (!value) return null;
-  const match = String(value)
-    .trim()
-    .toLowerCase()
-    .match(/^(\d+)\s*(ms|msec|millisecond|milliseconds|s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)$/);
-  if (!match) return null;
-
-  const amount = Number(match[1]);
-  if (!Number.isFinite(amount) || amount <= 0) return null;
-
-  const rawUnit = match[2];
-  let unit = rawUnit;
-  if (['msec', 'millisecond', 'milliseconds'].includes(rawUnit)) unit = 'ms';
-  if (['sec', 'secs', 'second', 'seconds'].includes(rawUnit)) unit = 's';
-  if (['min', 'mins', 'minute', 'minutes'].includes(rawUnit)) unit = 'm';
-  if (['hr', 'hrs', 'hour', 'hours'].includes(rawUnit)) unit = 'h';
-
-  return { amount, unit };
-}
-
-function normalizeGranularity(value) {
-  const parsed = parseGranularityParts(value);
-  return `${parsed.amount}${parsed.unit}`;
-}
-
-function parseGranularityToMs(value) {
-  const parsed = parseGranularityParts(value);
-  if (!parsed) return null;
-
-  const multipliers = {
-    ms: 1,
-    s: 1000,
-    m: 60 * 1000,
-    h: 60 * 60 * 1000
-  };
-
-  return parsed.amount * multipliers[parsed.unit];
-}
-
 function applyGranularity(runKey = 'a') {
   const controls = getControlElements(runKey);
   if (!controls.granularityInput) return;
@@ -666,108 +606,6 @@ function applyGranularity(runKey = 'a') {
   renderAll();
 }
 
-function formatTimeLabel(timestampMs) {
-  const date = new Date(timestampMs);
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  const ss = String(date.getSeconds()).padStart(2, '0');
-  return `${hh}:${mm}:${ss}`;
-}
-
-function aggregateSeries(points, bucketSizeMs) {
-  if (!Array.isArray(points) || points.length === 0) return [];
-
-  const buckets = new Map();
-  points.forEach((point) => {
-    const timestamp = Number(point.timestamp);
-    if (!Number.isFinite(timestamp)) return;
-
-    const bucketStart = Math.floor(timestamp / bucketSizeMs) * bucketSizeMs;
-    if (!buckets.has(bucketStart)) {
-      buckets.set(bucketStart, { sum: 0, count: 0 });
-    }
-
-    const bucket = buckets.get(bucketStart);
-    bucket.sum += Number(point.value) || 0;
-    bucket.count += 1;
-  });
-
-  return Array.from(buckets.entries())
-    .sort((a, b) => a[0] - b[0])
-    .map(([timestamp, bucket]) => ({
-      time: formatTimeLabel(timestamp),
-      timestamp,
-      value: bucket.count > 0 ? bucket.sum / bucket.count : 0
-    }));
-}
-
-function aggregateByScenario(byScenario, bucketSizeMs) {
-  const aggregated = {};
-  Object.entries(byScenario || {}).forEach(([scenario, points]) => {
-    aggregated[scenario] = aggregateSeries(points, bucketSizeMs);
-  });
-  return aggregated;
-}
-
-function getMetricStyle(metricKey, lineIndex = 0) {
-  const palette = {
-    vus: { borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.12)' },
-    requests: { borderColor: '#059669', backgroundColor: 'rgba(5, 150, 105, 0.12)' },
-    failedRequests: { borderColor: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.1)' },
-    iterations: { borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.1)' },
-    responseTimeAvg: { borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.1)' }
-  };
-
-  const base = palette[metricKey] || { borderColor: '#475569', backgroundColor: 'rgba(71, 85, 105, 0.1)' };
-  const dashByMetric = {
-    failedRequests: [6, 4],
-    responseTimeAvg: [2, 2]
-  };
-
-  return {
-    ...base,
-    borderDash: dashByMetric[metricKey] || [],
-    pointRadius: lineIndex > 2 ? 0 : 2,
-    pointHoverRadius: 4
-  };
-}
-
-function createDataset(label, dataValues, metricKey, axis, lineIndex) {
-  const style = getMetricStyle(metricKey, lineIndex);
-  return {
-    label,
-    data: dataValues,
-    borderColor: style.borderColor,
-    backgroundColor: style.backgroundColor,
-    borderDash: style.borderDash,
-    borderWidth: 2,
-    fill: false,
-    tension: 0.35,
-    pointRadius: style.pointRadius,
-    pointHoverRadius: style.pointHoverRadius,
-    pointBackgroundColor: style.borderColor,
-    yAxisID: axis
-  };
-}
-
-function collectSortedTimestampsFromSeries(series) {
-  const timestamps = new Set();
-  (series || []).forEach((point) => {
-    if (Number.isFinite(point.timestamp)) timestamps.add(point.timestamp);
-  });
-  return Array.from(timestamps).sort((a, b) => a - b);
-}
-
-function collectSortedTimestampsFromByScenario(byScenario) {
-  const timestamps = new Set();
-  Object.values(byScenario || {}).forEach((points) => {
-    (points || []).forEach((point) => {
-      if (Number.isFinite(point.timestamp)) timestamps.add(point.timestamp);
-    });
-  });
-  return Array.from(timestamps).sort((a, b) => a - b);
-}
-
 function getAxisTitle(settings, metricKeys, axisId) {
   const labels = metricKeys
     .filter((metricKey) => (settings.axisAssignments[metricKey] || METRIC_CONFIG[metricKey]?.axis || 'y') === axisId)
@@ -778,8 +616,9 @@ function getAxisTitle(settings, metricKeys, axisId) {
 
 function renderChartForRun(runKey) {
   const run = runStore[runKey];
-  const chartId = runKey === 'a' ? 'chartA' : 'chartB';
-  const legendId = runKey === 'a' ? 'scenarioLegendA' : 'scenarioLegendB';
+  const runUi = getRunUiConfig(runKey);
+  const chartId = runUi.chartId;
+  const legendId = runUi.legendId;
 
   if (charts[runKey]) {
     charts[runKey].destroy();
@@ -959,25 +798,6 @@ function updateScenarioLegend(container, scenarios, colors) {
   });
 }
 
-function generateColors(count) {
-  const colors = [
-    { border: '#0066cc', background: 'rgba(0, 102, 204, 0.1)' },
-    { border: '#059669', background: 'rgba(5, 150, 105, 0.1)' },
-    { border: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)' },
-    { border: '#dc2626', background: 'rgba(220, 38, 38, 0.1)' },
-    { border: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' },
-    { border: '#06b6d4', background: 'rgba(6, 182, 212, 0.1)' },
-    { border: '#ec4899', background: 'rgba(236, 72, 153, 0.1)' },
-    { border: '#14b8a6', background: 'rgba(20, 184, 166, 0.1)' }
-  ];
-
-  const result = [];
-  for (let i = 0; i < count; i += 1) {
-    result.push(colors[i % colors.length]);
-  }
-  return result;
-}
-
 function getScenarioFailedTotals(runKey) {
   const run = runStore[runKey];
   const totals = {};
@@ -1050,8 +870,9 @@ function getSortedEndpoints(endpoints, runKey = 'a') {
 }
 
 function renderEndpointSectionForRun(runKey) {
-  const sectionId = runKey === 'a' ? 'endpointSection' : 'endpointSectionB';
-  const endpointListId = runKey === 'a' ? 'endpointList' : 'endpointListB';
+  const runUi = getRunUiConfig(runKey);
+  const sectionId = runUi.endpointSectionId;
+  const endpointListId = runUi.endpointListId;
   const endpointSection = document.getElementById(sectionId);
   const endpointList = document.getElementById(endpointListId);
   const endpointData = runStore[runKey].endpoints;
@@ -1075,8 +896,9 @@ function renderEndpointSectionForRun(runKey) {
 }
 
 function destroyEndpointCharts(runKey) {
-  const reqKey = runKey === 'a' ? 'endpointRequestsA' : 'endpointRequestsB';
-  const durKey = runKey === 'a' ? 'endpointDurationA' : 'endpointDurationB';
+  const runUi = getRunUiConfig(runKey);
+  const reqKey = runUi.endpointRequestsChartKey;
+  const durKey = runUi.endpointDurationChartKey;
 
   if (charts[reqKey]) {
     charts[reqKey].destroy();
@@ -1086,27 +908,6 @@ function destroyEndpointCharts(runKey) {
     charts[durKey].destroy();
     charts[durKey] = null;
   }
-}
-
-function wrapChartLabel(label, maxLineLength = 28) {
-  if (!label || label.length <= maxLineLength) return label;
-
-  const parts = label.split('/');
-  const lines = [];
-  let currentLine = '';
-
-  parts.forEach((part, index) => {
-    const token = index === 0 ? part : `/${part}`;
-    if ((currentLine + token).length > maxLineLength && currentLine) {
-      lines.push(currentLine);
-      currentLine = token;
-      return;
-    }
-    currentLine += token;
-  });
-
-  if (currentLine) lines.push(currentLine);
-  return lines;
 }
 
 function splitEndpointDisplay(endpoint) {
@@ -1139,18 +940,13 @@ function getEndpointChartLabel(endpoint) {
   return display.path || display.full;
 }
 
-function truncateFromFront(value, maxLength = 52) {
-  if (!value || value.length <= maxLength) return value;
-  const keep = Math.max(8, maxLength - 3);
-  return `...${value.slice(-keep)}`;
-}
-
 function renderEndpointRequestsChart(runKey) {
   const endpointData = runStore[runKey].endpoints;
   if (!endpointData?.endpoints) return;
 
-  const chartKey = runKey === 'a' ? 'endpointRequestsA' : 'endpointRequestsB';
-  const canvasId = runKey === 'a' ? 'endpointRequestsChart' : 'endpointRequestsChartB';
+  const runUi = getRunUiConfig(runKey);
+  const chartKey = runUi.endpointRequestsChartKey;
+  const canvasId = runUi.endpointRequestsCanvasId;
 
   if (charts[chartKey]) charts[chartKey].destroy();
 
@@ -1209,8 +1005,9 @@ function renderEndpointDurationChart(runKey) {
   const endpointData = runStore[runKey].endpoints;
   if (!endpointData?.endpoints) return;
 
-  const chartKey = runKey === 'a' ? 'endpointDurationA' : 'endpointDurationB';
-  const canvasId = runKey === 'a' ? 'endpointDurationChart' : 'endpointDurationChartB';
+  const runUi = getRunUiConfig(runKey);
+  const chartKey = runUi.endpointDurationChartKey;
+  const canvasId = runUi.endpointDurationCanvasId;
 
   if (charts[chartKey]) charts[chartKey].destroy();
 
@@ -1270,24 +1067,9 @@ function renderEndpointDurationChart(runKey) {
   });
 }
 
-function formatNumberCompact(value) {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-';
-  return Math.round(value).toLocaleString();
-}
-
-function formatDurationCompact(value) {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-';
-  return `${Math.round(value)} ms`;
-}
-
-function truncateMiddle(value, maxLength = 52) {
-  if (!value || value.length <= maxLength) return value;
-  const keep = Math.max(8, Math.floor((maxLength - 3) / 2));
-  return `${value.slice(0, keep)}...${value.slice(-keep)}`;
-}
-
 function renderEndpointList(runKey) {
-  const endpointList = document.getElementById(runKey === 'a' ? 'endpointList' : 'endpointListB');
+  const runUi = getRunUiConfig(runKey);
+  const endpointList = document.getElementById(runUi.endpointListId);
   if (!endpointList) return;
 
   const endpointData = runStore[runKey].endpoints;
@@ -1412,7 +1194,16 @@ function displayMetricsForRun(runKey) {
     return Math.round(ms).toLocaleString();
   };
 
-  const suffix = runKey === 'a' ? '' : 'B';
+  const formatTestDuration = (ms) => {
+    if (ms === null || ms === undefined || ms === 0) return '-';
+    const totalSeconds = Math.round(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+  };
+
+  const suffix = getRunUiConfig(runKey).suffix;
+  document.getElementById(`metricTestDuration${suffix}`).textContent = formatTestDuration(metrics.testDuration);
   document.getElementById(`metricRequests${suffix}`).textContent = formatNumber(metrics.httpReqs);
   document.getElementById(`checksPassed${suffix}`).textContent = formatNumber(metrics.checks.passed);
   document.getElementById(`checksTotal${suffix}`).textContent = formatNumber(metrics.checks.passed + metrics.checks.failed);
@@ -1421,14 +1212,6 @@ function displayMetricsForRun(runKey) {
   document.getElementById(`metricDataReceived${suffix}`).textContent = formatBytes(metrics.dataReceived);
   document.getElementById(`metricDataSent${suffix}`).textContent = formatBytes(metrics.dataSent);
   document.getElementById(`metricIterationAvg${suffix}`).textContent = formatDuration(metrics.iterationDuration.avg);
-}
-
-function formatBytes(bytes) {
-  if (bytes === 0 || bytes === '-' || bytes === null || bytes === undefined) return '-';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 function showLoading(show) {
@@ -1484,7 +1267,10 @@ function resetApplicationState() {
   updateToolbarState();
 }
 
-window.addEventListener('load', async () => {
+async function initializeApp() {
+  if (isAppInitialized) return;
+  isAppInitialized = true;
+
   bindUploadEvents();
   bindControlEvents();
   syncControlsFromActiveSettings();
@@ -1498,4 +1284,12 @@ window.addEventListener('load', async () => {
   } catch (err) {
     // Keep empty dashboard visible when no previous results exist.
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+  initializeApp();
+}
+
+export { initializeApp };

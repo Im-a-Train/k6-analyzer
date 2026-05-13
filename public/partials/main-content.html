@@ -1,0 +1,148 @@
+<main>
+  <input type="file" id="fileInput" accept=".json" class="visually-hidden" title="Upload k6 results JSON file">
+
+  <div class="progress-container hidden-with-margin" id="progressContainer">
+    <div class="progress-label">
+      <span id="progressText">Uploading...</span>
+      <span id="progressPercent">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <section class="results-section" id="resultsSection">
+    <div class="results-header">
+      <h2 id="resultsMainTitle">Test Results</h2>
+      <div class="results-toolbar">
+        <label class="toolbar-toggle" for="compareModeToggle">
+          <input type="checkbox" id="compareModeToggle">
+          <span>Compare A/B</span>
+        </label>
+        <button class="btn btn-secondary" id="resetResultsBtn" type="button">Clear</button>
+      </div>
+    </div>
+
+    <div class="run-compare-grid" id="metricsCompareGrid">
+      <section class="run-metrics-panel" id="metricsPanelA">
+        <div class="run-result-header" id="runResultHeaderA">
+          <div>
+            <h3 class="run-panel-title" id="runHeaderTitleA">Test Results</h3>
+            <p class="run-panel-subtitle" id="runHeaderRangeA"></p>
+          </div>
+          <div class="run-header-actions">
+            <button class="btn btn-secondary" id="uploadRunBtnA" type="button">Upload Run A</button>
+            <label class="toolbar-toggle hidden" id="coupleSettingsWrapA" for="coupleSettingsToggleA">
+              <input type="checkbox" id="coupleSettingsToggleA" checked>
+              <span>Couple Settings</span>
+            </label>
+          </div>
+        </div>
+        <div class="metrics-grid" id="metricsGridA"></div>
+      </section>
+
+      <section class="run-metrics-panel hidden" id="metricsPanelB">
+        <div class="run-result-header" id="runResultHeaderB">
+          <div>
+            <h3 class="run-panel-title" id="runHeaderTitleB">Run B</h3>
+            <p class="run-panel-subtitle" id="runHeaderRangeB"></p>
+          </div>
+          <div class="run-header-actions">
+            <button class="btn btn-secondary" id="uploadRunBtnB" type="button">Upload Run B</button>
+            <label class="toolbar-toggle hidden" id="coupleSettingsWrapB" for="coupleSettingsToggleB">
+              <input type="checkbox" id="coupleSettingsToggleB" checked>
+              <span>Couple Settings</span>
+            </label>
+          </div>
+        </div>
+        <div class="metrics-grid" id="metricsGridB"></div>
+      </section>
+    </div>
+
+    <div class="run-compare-grid" id="chartsCompareGrid">
+      <section class="charts-section" id="chartsSectionA">
+        <h2>Performance Charts (Run A)</h2>
+
+        <div class="metric-presets" id="metricPresets"></div>
+        <div class="metric-selectors" id="metricSelectors"></div>
+
+        <div class="chart-controls">
+          <div class="chart-toggle" id="chartToggleA">
+            <button class="chart-type-btn active" data-view="overall">Overall</button>
+            <button class="chart-type-btn" data-view="byScenario">By Scenario</button>
+          </div>
+
+          <div class="granularity-control">
+            <label for="granularityInput">Granularity</label>
+            <input type="text" id="granularityInput" value="1s" aria-label="Chart granularity" placeholder="e.g. 1s, 30s, 2m">
+            <button class="btn btn-secondary" id="applyGranularityBtn" type="button">Apply</button>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartA"></canvas>
+        </div>
+        <div id="scenarioLegendA" class="scenario-legend hidden"></div>
+
+        <article class="scenario-error-card">
+          <div class="endpoint-list-header">
+            <h3>HTTP Errors By Scenario</h3>
+            <p>Shows aggregated failed HTTP requests grouped per scenario.</p>
+          </div>
+          <div class="scenario-error-list" id="scenarioErrorListA"></div>
+        </article>
+      </section>
+
+      <section class="charts-section hidden" id="chartsSectionB">
+        <h2>Performance Charts (Run B)</h2>
+
+        <div class="metric-presets" id="metricPresetsB"></div>
+        <div class="metric-selectors" id="metricSelectorsB"></div>
+
+        <div class="chart-controls">
+          <div class="chart-toggle" id="chartToggleB">
+            <button class="chart-type-btn active" data-view="overall">Overall</button>
+            <button class="chart-type-btn" data-view="byScenario">By Scenario</button>
+          </div>
+
+          <div class="granularity-control">
+            <label for="granularityInputB">Granularity</label>
+            <input type="text" id="granularityInputB" value="1s" aria-label="Chart granularity B" placeholder="e.g. 1s, 30s, 2m">
+            <button class="btn btn-secondary" id="applyGranularityBtnB" type="button">Apply</button>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartB"></canvas>
+        </div>
+        <div id="scenarioLegendB" class="scenario-legend hidden"></div>
+
+        <article class="scenario-error-card">
+          <div class="endpoint-list-header">
+            <h3>HTTP Errors By Scenario</h3>
+            <p>Shows aggregated failed HTTP requests grouped per scenario.</p>
+          </div>
+          <div class="scenario-error-list" id="scenarioErrorListB"></div>
+        </article>
+      </section>
+    </div>
+
+    <div class="run-compare-grid" id="endpointCompareGrid">
+      <section class="endpoint-section" id="endpointSection">
+        <div id="endpointPanelContentA"></div>
+      </section>
+
+      <section class="endpoint-section hidden" id="endpointSectionB">
+        <div id="endpointPanelContentB"></div>
+      </section>
+    </div>
+  </section>
+
+  <div class="loading hidden" id="loading">
+    <p>Processing your file...</p>
+  </div>
+
+  <div class="error hidden" id="error">
+    <p id="errorText"></p>
+  </div>
+</main>

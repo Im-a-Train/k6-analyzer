@@ -1,0 +1,217 @@
+{
+    "metrics": {},
+    "points": [
+        {
+            "metric": "vus",
+            "data": {
+                "time": "2026-05-13T14:00:00.000Z",
+                "value": 5,
+                "tags": {
+                    "scenario": "smoke"
+                }
+            }
+        },
+        {
+            "metric": "http_reqs",
+            "data": {
+                "time": "2026-05-13T14:00:00.100Z",
+                "value": 1,
+                "tags": {
+                    "scenario": "smoke",
+                    "url": "https://api.example.com/users/12345",
+                    "status": "200"
+                }
+            }
+        },
+        {
+            "metric": "http_req_duration",
+            "data": {
+                "time": "2026-05-13T14:00:00.110Z",
+                "value": 148.2,
+                "tags": {
+                    "scenario": "smoke",
+                    "url": "https://api.example.com/users/12345"
+                }
+            }
+        },
+        {
+            "metric": "checks",
+            "data": {
+                "time": "2026-05-13T14:00:00.120Z",
+                "value": 1,
+                "tags": {
+                    "scenario": "smoke"
+                }
+            }
+        },
+        {
+            "metric": "iteration_duration",
+            "data": {
+                "time": "2026-05-13T14:00:00.130Z",
+                "value": 521.8,
+                "tags": {
+                    "scenario": "smoke"
+                }
+            }
+        },
+        {
+            "metric": "data_received",
+            "data": {
+                "time": "2026-05-13T14:00:00.140Z",
+                "value": 2048,
+                "tags": {
+                    "scenario": "smoke"
+                }
+            }
+        },
+        {
+            "metric": "data_sent",
+            "data": {
+                "time": "2026-05-13T14:00:00.150Z",
+                "value": 512,
+                "tags": {
+                    "scenario": "smoke"
+                }
+            }
+        },
+        {
+            "metric": "vus",
+            "data": {
+                "time": "2026-05-13T14:00:01.000Z",
+                "value": 12,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        },
+        {
+            "metric": "http_reqs",
+            "data": {
+                "time": "2026-05-13T14:00:01.090Z",
+                "value": 1,
+                "tags": {
+                    "scenario": "load",
+                    "url": "https://api.example.com/orders/98765",
+                    "status": "500"
+                }
+            }
+        },
+        {
+            "metric": "http_req_duration",
+            "data": {
+                "time": "2026-05-13T14:00:01.100Z",
+                "value": 892.4,
+                "tags": {
+                    "scenario": "load",
+                    "url": "https://api.example.com/orders/98765"
+                }
+            }
+        },
+        {
+            "metric": "checks",
+            "data": {
+                "time": "2026-05-13T14:00:01.110Z",
+                "value": 0,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        },
+        {
+            "metric": "iteration_duration",
+            "data": {
+                "time": "2026-05-13T14:00:01.120Z",
+                "value": 1034.7,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        },
+        {
+            "metric": "data_received",
+            "data": {
+                "time": "2026-05-13T14:00:01.130Z",
+                "value": 4096,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        },
+        {
+            "metric": "data_sent",
+            "data": {
+                "time": "2026-05-13T14:00:01.140Z",
+                "value": 1024,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        },
+        {
+            "metric": "http_reqs",
+            "data": {
+                "time": "2026-05-13T14:00:02.000Z",
+                "value": 1,
+                "tags": {
+                    "scenario": "load",
+                    "url": "https://api.example.com/orders/11111",
+                    "status": "200"
+                }
+            }
+        },
+        {
+            "metric": "http_req_duration",
+            "data": {
+                "time": "2026-05-13T14:00:02.010Z",
+                "value": 242.1,
+                "tags": {
+                    "scenario": "load",
+                    "url": "https://api.example.com/orders/11111"
+                }
+            }
+        },
+        {
+            "metric": "checks",
+            "data": {
+                "time": "2026-05-13T14:00:02.020Z",
+                "value": 1,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        },
+        {
+            "metric": "http_reqs",
+            "data": {
+                "time": "2026-05-13T14:00:03.000Z",
+                "value": 1,
+                "tags": {
+                    "scenario": "load",
+                    "url": "https://api.example.com/products/550e8400-e29b-41d4-a716-446655440000",
+                    "status": "404"
+                }
+            }
+        },
+        {
+            "metric": "http_req_duration",
+            "data": {
+                "time": "2026-05-13T14:00:03.010Z",
+                "value": 463.9,
+                "tags": {
+                    "scenario": "load",
+                    "url": "https://api.example.com/products/550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        {
+            "metric": "iteration_duration",
+            "data": {
+                "time": "2026-05-13T14:00:03.020Z",
+                "value": 777.3,
+                "tags": {
+                    "scenario": "load"
+                }
+            }
+        }
+    ]
+}
