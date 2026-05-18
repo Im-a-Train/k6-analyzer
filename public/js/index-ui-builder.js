@@ -1,7 +1,11 @@
 const METRIC_CARD_DEFINITIONS = [
   { key: 'TestDuration', title: 'Test Duration', unit: 'seconds' },
+  { key: 'RequestsPerSecond', title: 'Overall Requests / s', unit: 'req/s' },
+  { key: 'TotalVUsers', title: 'Total vUsers', unit: 'vusers' },
+  { key: 'WsSessions', title: 'WebSocket Sessions', unit: 'sessions' },
+  { key: 'WsMsgsSent', title: 'WS Messages Sent', unit: 'messages' },
+  { key: 'WsMsgsReceived', title: 'WS Messages Received', unit: 'messages' },
   { key: 'Requests', title: 'Total Requests', unit: 'requests' },
-  { key: 'Checks', title: 'Checks', unit: 'passed/total' },
   { key: 'MinDuration', title: 'Response Time (min)', unit: 'milliseconds' },
   { key: 'MaxDuration', title: 'Response Time (max)', unit: 'milliseconds' },
   { key: 'DataReceived', title: 'Data Received', unit: 'bytes' },
@@ -21,6 +25,8 @@ const METRIC_SELECTOR_DEFINITIONS = [
   { key: 'requests', label: 'Requests', checked: true, defaultAxis: 'y' },
   { key: 'failedRequests', label: 'Failed Requests', checked: true, defaultAxis: 'y' },
   { key: 'iterations', label: 'Iterations', checked: false, defaultAxis: 'y' },
+  { key: 'wsMsgsSent', label: 'WS Messages Sent', checked: false, defaultAxis: 'y' },
+  { key: 'wsMsgsReceived', label: 'WS Messages Received', checked: false, defaultAxis: 'y' },
   { key: 'responseTimeAvg', label: 'Response Time (avg ms)', checked: false, defaultAxis: 'y1' }
 ];
 

@@ -17,6 +17,7 @@ import {
 } from './js/chart-utils.js';
 import { uploadResultsFile, fetchRunData } from './js/api-client.js';
 import { getRunUiConfig } from './js/run-config.js';
+import { exportReportAsPdf } from './js/pdf-export.js';
 
 // DOM Elements
 const uploadArea = document.getElementById('uploadArea');
@@ -40,6 +41,7 @@ const coupleSettingsToggleB = document.getElementById('coupleSettingsToggleB');
 const coupleSettingsWrapA = document.getElementById('coupleSettingsWrapA');
 const coupleSettingsWrapB = document.getElementById('coupleSettingsWrapB');
 const resetResultsBtn = document.getElementById('resetResultsBtn');
+const exportPdfBtn = document.getElementById('exportPdfBtn');
 const resultsMainTitle = document.getElementById('resultsMainTitle');
 const runHeaderTitleA = document.getElementById('runHeaderTitleA');
 const runHeaderTitleB = document.getElementById('runHeaderTitleB');
@@ -73,6 +75,8 @@ const METRIC_CONFIG = {
   requests: { label: 'Requests', axis: 'y' },
   failedRequests: { label: 'Failed Requests', axis: 'y' },
   iterations: { label: 'Iterations', axis: 'y' },
+  wsMsgsSent: { label: 'WS Messages Sent', axis: 'y' },
+  wsMsgsReceived: { label: 'WS Messages Received', axis: 'y' },
   responseTimeAvg: { label: 'Response Time (avg ms)', axis: 'y1' }
 };
 
@@ -80,7 +84,7 @@ const METRIC_PRESETS = {
   load: ['vus', 'requests', 'failedRequests'],
   errors: ['requests', 'failedRequests'],
   latency: ['responseTimeAvg', 'requests'],
-  all: ['vus', 'requests', 'failedRequests', 'iterations', 'responseTimeAvg']
+  all: ['vus', 'requests', 'failedRequests', 'iterations', 'wsMsgsSent', 'wsMsgsReceived', 'responseTimeAvg']
 };
 
 const DEFAULT_METRICS = ['vus', 'requests', 'failedRequests'];
@@ -241,6 +245,12 @@ function bindUploadEvents() {
 
   if (resetResultsBtn) {
     resetResultsBtn.addEventListener('click', resetApplicationState);
+  }
+
+  if (exportPdfBtn) {
+    exportPdfBtn.addEventListener('click', () => {
+      exportReportAsPdf(runStore);
+    });
   }
 }
 
@@ -555,10 +565,50 @@ async function loadResultsForRun(runKey) {
   renderAll();
 }
 
+function computeAxisMaxValues(runKey, settings) {
+  const run = runStore[runKey];
+  if (!run.loaded || !run.timeseries) return { yMax: null, y1Max: null };
+
+  const bucketSizeMs = parseGranularityToMs(settings.granularity);
+  if (!bucketSizeMs) return { yMax: null, y1Max: null };
+
+  const metricKeys = settings.selectedMetrics.filter((k) => run.timeseries[k]);
+  let yMax = 0;
+  let y1Max = 0;
+
+  metricKeys.forEach((metricKey) => {
+    const axis = settings.axisAssignments[metricKey] || METRIC_CONFIG[metricKey]?.axis || 'y';
+    const series = aggregateSeries(run.timeseries[metricKey].overall, bucketSizeMs);
+    const max = series.reduce((m, p) => Math.max(m, p.value || 0), 0);
+    if (axis === 'y1') {
+      y1Max = Math.max(y1Max, max);
+    } else {
+      yMax = Math.max(yMax, max);
+    }
+  });
+
+  return { yMax, y1Max };
+}
+
 function renderAll() {
   updateCompareVisibility();
-  renderChartForRun('a');
-  renderChartForRun('b');
+
+  const coupledCompare = appState.coupledSettings && appState.compareEnabled
+    && runStore.a.loaded && runStore.b.loaded;
+
+  let sharedScales = null;
+  if (coupledCompare) {
+    const aMax = computeAxisMaxValues('a', settingsStore.a);
+    const bMax = computeAxisMaxValues('b', settingsStore.b);
+    const pad = (v) => (v ? v * 1.05 : undefined);
+    sharedScales = {
+      yMax: pad(Math.max(aMax.yMax, bMax.yMax) || undefined),
+      y1Max: pad(Math.max(aMax.y1Max, bMax.y1Max) || undefined)
+    };
+  }
+
+  renderChartForRun('a', sharedScales);
+  renderChartForRun('b', sharedScales);
   renderScenarioErrorSummary();
   displayMetricsForRun('a');
   displayMetricsForRun('b');
@@ -614,7 +664,7 @@ function getAxisTitle(settings, metricKeys, axisId) {
   return labels.join(', ');
 }
 
-function renderChartForRun(runKey) {
+function renderChartForRun(runKey, sharedScales = null) {
   const run = runStore[runKey];
   const runUi = getRunUiConfig(runKey);
   const chartId = runUi.chartId;
@@ -746,6 +796,7 @@ function renderChartForRun(runKey) {
       scales: {
         y: {
           beginAtZero: true,
+          ...(sharedScales?.yMax ? { max: sharedScales.yMax } : {}),
           title: {
             display: true,
             text: leftAxisTitle
@@ -756,6 +807,7 @@ function renderChartForRun(runKey) {
           display: usesSecondaryAxis,
           position: 'right',
           beginAtZero: true,
+          ...(sharedScales?.y1Max && usesSecondaryAxis ? { max: sharedScales.y1Max } : {}),
           title: {
             display: usesSecondaryAxis,
             text: rightAxisTitle
@@ -1202,11 +1254,22 @@ function displayMetricsForRun(runKey) {
     return minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
   };
 
+  const formatRate = (value) => {
+    if (value === null || value === undefined || Number.isNaN(value)) return '-';
+    return Number(value).toLocaleString(undefined, { maximumFractionDigits: 2 });
+  };
+
   const suffix = getRunUiConfig(runKey).suffix;
+  const durationSeconds = (Number(metrics.testDuration) || 0) / 1000;
+  const requestsPerSecond = durationSeconds > 0 ? (Number(metrics.httpReqs) || 0) / durationSeconds : null;
+
   document.getElementById(`metricTestDuration${suffix}`).textContent = formatTestDuration(metrics.testDuration);
+  document.getElementById(`metricRequestsPerSecond${suffix}`).textContent = formatRate(requestsPerSecond);
+  document.getElementById(`metricTotalVUsers${suffix}`).textContent = formatNumber(metrics.vus?.max || 0);
+  document.getElementById(`metricWsSessions${suffix}`).textContent = formatNumber(metrics.wsSessions);
+  document.getElementById(`metricWsMsgsSent${suffix}`).textContent = formatNumber(metrics.wsMsgsSent);
+  document.getElementById(`metricWsMsgsReceived${suffix}`).textContent = formatNumber(metrics.wsMsgsReceived);
   document.getElementById(`metricRequests${suffix}`).textContent = formatNumber(metrics.httpReqs);
-  document.getElementById(`checksPassed${suffix}`).textContent = formatNumber(metrics.checks.passed);
-  document.getElementById(`checksTotal${suffix}`).textContent = formatNumber(metrics.checks.passed + metrics.checks.failed);
   document.getElementById(`metricMinDuration${suffix}`).textContent = formatDuration(metrics.httpReqDuration.min);
   document.getElementById(`metricMaxDuration${suffix}`).textContent = formatDuration(metrics.httpReqDuration.max);
   document.getElementById(`metricDataReceived${suffix}`).textContent = formatBytes(metrics.dataReceived);
