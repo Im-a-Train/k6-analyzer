@@ -32,6 +32,18 @@
             <p class="run-panel-subtitle" id="runHeaderRangeA"></p>
           </div>
           <div class="run-header-actions">
+            <div class="time-filter" id="timeFilterWrapA">
+              <div class="time-filter-label-row">
+                <span class="time-filter-title">Time Window</span>
+                <span class="time-filter-value" id="timeFilterValueA">Full range</span>
+              </div>
+              <div class="time-filter-dual-slider">
+                <div class="time-filter-track"></div>
+                <div class="time-filter-track-active" id="timeFilterActiveA"></div>
+                <input type="range" id="timeFilterStartA" class="time-filter-handle" aria-label="Run A time window start" disabled>
+                <input type="range" id="timeFilterEndA" class="time-filter-handle" aria-label="Run A time window end" disabled>
+              </div>
+            </div>
             <button class="btn btn-secondary" id="uploadRunBtnA" type="button">Upload Run A</button>
             <label class="toolbar-toggle hidden" id="coupleSettingsWrapA" for="coupleSettingsToggleA">
               <input type="checkbox" id="coupleSettingsToggleA" checked>
@@ -49,6 +61,18 @@
             <p class="run-panel-subtitle" id="runHeaderRangeB"></p>
           </div>
           <div class="run-header-actions">
+            <div class="time-filter" id="timeFilterWrapB">
+              <div class="time-filter-label-row">
+                <span class="time-filter-title">Time Window</span>
+                <span class="time-filter-value" id="timeFilterValueB">Full range</span>
+              </div>
+              <div class="time-filter-dual-slider">
+                <div class="time-filter-track"></div>
+                <div class="time-filter-track-active" id="timeFilterActiveB"></div>
+                <input type="range" id="timeFilterStartB" class="time-filter-handle" aria-label="Run B time window start" disabled>
+                <input type="range" id="timeFilterEndB" class="time-filter-handle" aria-label="Run B time window end" disabled>
+              </div>
+            </div>
             <button class="btn btn-secondary" id="uploadRunBtnB" type="button">Upload Run B</button>
             <label class="toolbar-toggle hidden" id="coupleSettingsWrapB" for="coupleSettingsToggleB">
               <input type="checkbox" id="coupleSettingsToggleB" checked>

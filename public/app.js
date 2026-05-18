@@ -47,6 +47,14 @@ const runHeaderTitleA = document.getElementById('runHeaderTitleA');
 const runHeaderTitleB = document.getElementById('runHeaderTitleB');
 const runHeaderRangeA = document.getElementById('runHeaderRangeA');
 const runHeaderRangeB = document.getElementById('runHeaderRangeB');
+const timeFilterValueA = document.getElementById('timeFilterValueA');
+const timeFilterValueB = document.getElementById('timeFilterValueB');
+const timeFilterStartA = document.getElementById('timeFilterStartA');
+const timeFilterEndA = document.getElementById('timeFilterEndA');
+const timeFilterStartB = document.getElementById('timeFilterStartB');
+const timeFilterEndB = document.getElementById('timeFilterEndB');
+const timeFilterActiveA = document.getElementById('timeFilterActiveA');
+const timeFilterActiveB = document.getElementById('timeFilterActiveB');
 
 const granularityInput = document.getElementById('granularityInput');
 const applyGranularityBtn = document.getElementById('applyGranularityBtn');
@@ -105,7 +113,10 @@ function createEmptyRun() {
     loaded: false,
     metrics: null,
     timeseries: null,
-    endpoints: null
+    endpoints: null,
+    timeFilter: null,
+    filteredTimeseriesCache: null,
+    filteredMetricsCache: null
   };
 }
 
@@ -383,6 +394,41 @@ function bindControlEvents() {
       renderEndpointSectionForRun('b');
     });
   }
+
+  ['a', 'b'].forEach((runKey) => {
+    const { start, end } = getTimeFilterElements(runKey);
+    if (!start || !end) return;
+
+    const onRangeInput = (source) => {
+      const run = runStore[runKey];
+      if (!run.timeFilter) return;
+
+      let nextStart = Number(start.value);
+      let nextEnd = Number(end.value);
+
+      if (!Number.isFinite(nextStart) || !Number.isFinite(nextEnd)) return;
+
+      if (nextStart > nextEnd) {
+        if (source === 'start') {
+          nextEnd = nextStart;
+          end.value = String(nextEnd);
+        } else {
+          nextStart = nextEnd;
+          start.value = String(nextStart);
+        }
+      }
+
+      run.timeFilter.startTs = nextStart;
+      run.timeFilter.endTs = nextEnd;
+      invalidateFilterCache(runKey);
+      updateTimeFilterUiForRun(runKey);
+      hideError();
+      renderAll();
+    };
+
+    start.addEventListener('input', () => onRangeInput('start'));
+    end.addEventListener('input', () => onRangeInput('end'));
+  });
 }
 
 function formatHeaderDateTime(timestamp) {
@@ -397,14 +443,31 @@ function formatHeaderDateTime(timestamp) {
   return `${day}.${month}.${year} ${hh}:${mm}:${ss}`;
 }
 
-function getRunDateRange(runKey) {
-  const run = runStore[runKey];
-  if (!run.loaded || !run.timeseries) return null;
+function getTimeFilterElements(runKey) {
+  if (runKey === 'b') {
+    return {
+      start: timeFilterStartB,
+      end: timeFilterEndB,
+      value: timeFilterValueB,
+      active: timeFilterActiveB
+    };
+  }
+
+  return {
+    start: timeFilterStartA,
+    end: timeFilterEndA,
+    value: timeFilterValueA,
+    active: timeFilterActiveA
+  };
+}
+
+function getRunBoundsFromTimeseries(timeseries) {
+  if (!timeseries) return null;
 
   let minTs = Infinity;
   let maxTs = -Infinity;
 
-  Object.values(run.timeseries).forEach((metricSeries) => {
+  Object.values(timeseries).forEach((metricSeries) => {
     (metricSeries?.overall || []).forEach((point) => {
       const ts = Number(point.timestamp);
       if (!Number.isFinite(ts)) return;
@@ -414,12 +477,228 @@ function getRunDateRange(runKey) {
   });
 
   if (!Number.isFinite(minTs) || !Number.isFinite(maxTs)) return null;
-  return `${formatHeaderDateTime(minTs)} - ${formatHeaderDateTime(maxTs)}`;
+  return { minTs, maxTs };
+}
+
+function ensureRunTimeFilter(runKey) {
+  const run = runStore[runKey];
+  if (!run.loaded || !run.timeseries) {
+    run.timeFilter = null;
+    return;
+  }
+
+  const bounds = getRunBoundsFromTimeseries(run.timeseries);
+  if (!bounds) {
+    run.timeFilter = null;
+    return;
+  }
+
+  const previous = run.timeFilter;
+  const startTs = previous ? Math.max(bounds.minTs, Math.min(previous.startTs, bounds.maxTs)) : bounds.minTs;
+  const endTs = previous ? Math.max(startTs, Math.min(previous.endTs, bounds.maxTs)) : bounds.maxTs;
+
+  run.timeFilter = {
+    minTs: bounds.minTs,
+    maxTs: bounds.maxTs,
+    startTs,
+    endTs
+  };
+}
+
+function invalidateFilterCache(runKey) {
+  runStore[runKey].filteredTimeseriesCache = null;
+  runStore[runKey].filteredMetricsCache = null;
+}
+
+function formatDateRangeText(startTs, endTs) {
+  if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return '-';
+  return `${formatHeaderDateTime(startTs)} - ${formatHeaderDateTime(endTs)}`;
+}
+
+function isTimeFilterActive(runKey) {
+  const filter = runStore[runKey].timeFilter;
+  if (!filter) return false;
+  return filter.startTs > filter.minTs || filter.endTs < filter.maxTs;
+}
+
+function updateTimeFilterUiForRun(runKey) {
+  const run = runStore[runKey];
+  const { start, end, value, active } = getTimeFilterElements(runKey);
+  if (!start || !end || !value || !active) return;
+
+  const filter = run.timeFilter;
+  if (!run.loaded || !filter) {
+    start.disabled = true;
+    end.disabled = true;
+    value.textContent = 'No data';
+    active.style.left = '0%';
+    active.style.width = '100%';
+    return;
+  }
+
+  start.disabled = false;
+  end.disabled = false;
+
+  start.min = String(filter.minTs);
+  start.max = String(filter.maxTs);
+  start.step = '1000';
+  start.value = String(filter.startTs);
+
+  end.min = String(filter.minTs);
+  end.max = String(filter.maxTs);
+  end.step = '1000';
+  end.value = String(filter.endTs);
+
+  const span = Math.max(1, filter.maxTs - filter.minTs);
+  const left = ((filter.startTs - filter.minTs) / span) * 100;
+  const right = ((filter.endTs - filter.minTs) / span) * 100;
+  active.style.left = `${Math.max(0, Math.min(100, left))}%`;
+  active.style.width = `${Math.max(0, Math.min(100, right - left))}%`;
+
+  value.textContent = isTimeFilterActive(runKey)
+    ? formatDateRangeText(filter.startTs, filter.endTs)
+    : 'Full range';
+}
+
+function filterSeriesPointsByTime(points, filter) {
+  if (!Array.isArray(points)) return [];
+  return points.filter((point) => {
+    const ts = Number(point.timestamp);
+    return Number.isFinite(ts) && ts >= filter.startTs && ts <= filter.endTs;
+  });
+}
+
+function getFilteredTimeseriesForRun(runKey) {
+  const run = runStore[runKey];
+  if (!run.loaded || !run.timeseries) return null;
+
+  const filter = run.timeFilter;
+  if (!filter || !isTimeFilterActive(runKey)) return run.timeseries;
+
+  const cacheKey = `${filter.startTs}:${filter.endTs}`;
+  if (run.filteredTimeseriesCache?.key === cacheKey) {
+    return run.filteredTimeseriesCache.value;
+  }
+
+  const filtered = {};
+  Object.entries(run.timeseries).forEach(([metricKey, metricSeries]) => {
+    const byScenario = {};
+    Object.entries(metricSeries?.byScenario || {}).forEach(([scenario, points]) => {
+      byScenario[scenario] = filterSeriesPointsByTime(points, filter);
+    });
+
+    filtered[metricKey] = {
+      overall: filterSeriesPointsByTime(metricSeries?.overall || [], filter),
+      byScenario
+    };
+  });
+
+  run.filteredTimeseriesCache = {
+    key: cacheKey,
+    value: filtered
+  };
+
+  return filtered;
+}
+
+function sumSeriesValues(points) {
+  return (points || []).reduce((sum, point) => sum + (Number(point.value) || 0), 0);
+}
+
+function getDisplayedMetricsForRun(runKey) {
+  const run = runStore[runKey];
+  if (!run.loaded || !run.metrics) return null;
+
+  if (!isTimeFilterActive(runKey)) {
+    return run.metrics;
+  }
+
+  const filter = run.timeFilter;
+  const cacheKey = `${filter.startTs}:${filter.endTs}`;
+  if (run.filteredMetricsCache?.key === cacheKey) {
+    return run.filteredMetricsCache.value;
+  }
+
+  const filteredTimeseries = getFilteredTimeseriesForRun(runKey);
+  const allTimeseries = run.timeseries;
+
+  const filteredRequests = sumSeriesValues(filteredTimeseries?.requests?.overall || []);
+  const fullRequests = Math.max(sumSeriesValues(allTimeseries?.requests?.overall || []), 1);
+  const requestRatio = Math.min(1, filteredRequests / fullRequests);
+
+  const vusValues = (filteredTimeseries?.vus?.overall || []).map((point) => Number(point.value) || 0);
+  const responseAvgSeries = filteredTimeseries?.responseTimeAvg?.overall || [];
+  const responseAvgValues = responseAvgSeries.map((point) => Number(point.value) || 0);
+  const iterationCount = sumSeriesValues(filteredTimeseries?.iterations?.overall || []);
+
+  const weightedResponseSum = responseAvgSeries.reduce((sum, point, idx) => {
+    const bucketReqs = Number(filteredTimeseries?.requests?.overall?.[idx]?.value) || 0;
+    return sum + (Number(point.value) || 0) * bucketReqs;
+  }, 0);
+  const responseWeight = sumSeriesValues(filteredTimeseries?.requests?.overall || []);
+
+  const estimated = {
+    ...run.metrics,
+    httpReqs: Math.round(filteredRequests),
+    dataReceived: (Number(run.metrics.dataReceived) || 0) * requestRatio,
+    dataSent: (Number(run.metrics.dataSent) || 0) * requestRatio,
+    wsSessions: Math.round((Number(run.metrics.wsSessions) || 0) * requestRatio),
+    wsMsgsSent: Math.round(sumSeriesValues(filteredTimeseries?.wsMsgsSent?.overall || [])),
+    wsMsgsReceived: Math.round(sumSeriesValues(filteredTimeseries?.wsMsgsReceived?.overall || [])),
+    checks: {
+      passed: Math.round((Number(run.metrics.checks?.passed) || 0) * requestRatio),
+      failed: Math.round((Number(run.metrics.checks?.failed) || 0) * requestRatio)
+    },
+    vus: {
+      ...(run.metrics.vus || {}),
+      max: vusValues.length > 0 ? Math.max(...vusValues) : 0,
+      min: vusValues.length > 0 ? Math.min(...vusValues) : 0,
+      value: vusValues.length > 0 ? vusValues[vusValues.length - 1] : 0
+    },
+    httpReqDuration: {
+      ...(run.metrics.httpReqDuration || {}),
+      min: responseAvgValues.length > 0 ? Math.min(...responseAvgValues) : 0,
+      max: responseAvgValues.length > 0 ? Math.max(...responseAvgValues) : 0,
+      avg: responseWeight > 0 ? weightedResponseSum / responseWeight : 0
+    },
+    iterationDuration: {
+      ...(run.metrics.iterationDuration || {}),
+      avg: iterationCount > 0 ? Number(run.metrics.iterationDuration?.avg) || 0 : 0
+    },
+    testDuration: Math.max(0, filter.endTs - filter.startTs)
+  };
+
+  run.filteredMetricsCache = {
+    key: cacheKey,
+    value: estimated
+  };
+
+  return estimated;
+}
+
+function getRunDateRange(runKey) {
+  const run = runStore[runKey];
+  if (!run.loaded || !run.timeFilter) return null;
+  return formatDateRangeText(run.timeFilter.minTs, run.timeFilter.maxTs);
+}
+
+function getRunDisplayedDateRange(runKey) {
+  const run = runStore[runKey];
+  if (!run.loaded || !run.timeFilter) return null;
+  return formatDateRangeText(run.timeFilter.startTs, run.timeFilter.endTs);
 }
 
 function updateResultsHeaderText(showB) {
-  const rangeA = getRunDateRange('a');
-  const rangeB = getRunDateRange('b');
+  const fullRangeA = getRunDateRange('a');
+  const fullRangeB = getRunDateRange('b');
+  const shownRangeA = getRunDisplayedDateRange('a');
+  const shownRangeB = getRunDisplayedDateRange('b');
+  const rangeA = isTimeFilterActive('a') && shownRangeA && fullRangeA
+    ? `${shownRangeA} (filtered)`
+    : fullRangeA;
+  const rangeB = isTimeFilterActive('b') && shownRangeB && fullRangeB
+    ? `${shownRangeB} (filtered)`
+    : fullRangeB;
 
   if (!showB) {
     if (resultsMainTitle) {
@@ -548,8 +827,14 @@ async function loadResultsForRun(runKey) {
     loaded: true,
     metrics: runData.metrics,
     timeseries: runData.timeseries,
-    endpoints: runData.endpoints
+    endpoints: runData.endpoints,
+    timeFilter: null,
+    filteredTimeseriesCache: null,
+    filteredMetricsCache: null
   };
+
+  ensureRunTimeFilter(runKey);
+  updateTimeFilterUiForRun(runKey);
 
   if (!runStore.a.loaded && runStore.b.loaded) {
     // Keep controls sensible if B is uploaded first.
@@ -567,18 +852,19 @@ async function loadResultsForRun(runKey) {
 
 function computeAxisMaxValues(runKey, settings) {
   const run = runStore[runKey];
-  if (!run.loaded || !run.timeseries) return { yMax: null, y1Max: null };
+  const timeseries = getFilteredTimeseriesForRun(runKey);
+  if (!run.loaded || !timeseries) return { yMax: null, y1Max: null };
 
   const bucketSizeMs = parseGranularityToMs(settings.granularity);
   if (!bucketSizeMs) return { yMax: null, y1Max: null };
 
-  const metricKeys = settings.selectedMetrics.filter((k) => run.timeseries[k]);
+  const metricKeys = settings.selectedMetrics.filter((k) => timeseries[k]);
   let yMax = 0;
   let y1Max = 0;
 
   metricKeys.forEach((metricKey) => {
     const axis = settings.axisAssignments[metricKey] || METRIC_CONFIG[metricKey]?.axis || 'y';
-    const series = aggregateSeries(run.timeseries[metricKey].overall, bucketSizeMs);
+    const series = aggregateSeries(timeseries[metricKey].overall, bucketSizeMs);
     const max = series.reduce((m, p) => Math.max(m, p.value || 0), 0);
     if (axis === 'y1') {
       y1Max = Math.max(y1Max, max);
@@ -592,6 +878,8 @@ function computeAxisMaxValues(runKey, settings) {
 
 function renderAll() {
   updateCompareVisibility();
+  updateTimeFilterUiForRun('a');
+  updateTimeFilterUiForRun('b');
 
   const coupledCompare = appState.coupledSettings && appState.compareEnabled
     && runStore.a.loaded && runStore.b.loaded;
@@ -666,6 +954,7 @@ function getAxisTitle(settings, metricKeys, axisId) {
 
 function renderChartForRun(runKey, sharedScales = null) {
   const run = runStore[runKey];
+  const timeseries = getFilteredTimeseriesForRun(runKey);
   const runUi = getRunUiConfig(runKey);
   const chartId = runUi.chartId;
   const legendId = runUi.legendId;
@@ -675,13 +964,13 @@ function renderChartForRun(runKey, sharedScales = null) {
     charts[runKey] = null;
   }
 
-  if (!run.loaded || !run.timeseries) return;
+  if (!run.loaded || !timeseries) return;
 
   const settings = settingsStore[runKey];
   const bucketSizeMs = parseGranularityToMs(settings.granularity);
   if (!bucketSizeMs) return;
 
-  const metricKeys = settings.selectedMetrics.filter((metricKey) => run.timeseries[metricKey]);
+  const metricKeys = settings.selectedMetrics.filter((metricKey) => timeseries[metricKey]);
   if (metricKeys.length === 0) return;
 
   let labels = [];
@@ -697,7 +986,7 @@ function renderChartForRun(runKey, sharedScales = null) {
     const metricSeriesMap = {};
 
     metricKeys.forEach((metricKey) => {
-      const series = aggregateSeries(run.timeseries[metricKey].overall, bucketSizeMs);
+      const series = aggregateSeries(timeseries[metricKey].overall, bucketSizeMs);
       metricSeriesMap[metricKey] = series;
       collectSortedTimestampsFromSeries(series).forEach((ts) => allTimestamps.add(ts));
     });
@@ -719,7 +1008,7 @@ function renderChartForRun(runKey, sharedScales = null) {
     const allTimestamps = new Set();
 
     metricKeys.forEach((metricKey) => {
-      const byScenario = aggregateByScenario(run.timeseries[metricKey].byScenario, bucketSizeMs);
+      const byScenario = aggregateByScenario(timeseries[metricKey].byScenario, bucketSizeMs);
       aggregatedByMetric[metricKey] = byScenario;
       Object.keys(byScenario).forEach((scenario) => scenarioSet.add(scenario));
       collectSortedTimestampsFromByScenario(byScenario).forEach((ts) => allTimestamps.add(ts));
@@ -852,10 +1141,11 @@ function updateScenarioLegend(container, scenarios, colors) {
 
 function getScenarioFailedTotals(runKey) {
   const run = runStore[runKey];
+  const timeseries = getFilteredTimeseriesForRun(runKey);
   const totals = {};
-  if (!run.loaded || !run.timeseries?.failedRequests?.byScenario) return totals;
+  if (!run.loaded || !timeseries?.failedRequests?.byScenario) return totals;
 
-  Object.entries(run.timeseries.failedRequests.byScenario).forEach(([scenario, points]) => {
+  Object.entries(timeseries.failedRequests.byScenario).forEach(([scenario, points]) => {
     totals[scenario] = (points || []).reduce((sum, point) => sum + (Number(point.value) || 0), 0);
   });
 
@@ -1232,7 +1522,7 @@ function renderEndpointList(runKey) {
 }
 
 function displayMetricsForRun(runKey) {
-  const metrics = runStore[runKey].metrics;
+  const metrics = getDisplayedMetricsForRun(runKey);
   if (!metrics) return;
 
   const formatNumber = (num) => {
@@ -1319,6 +1609,8 @@ function resetApplicationState() {
 
   if (scenarioErrorListA) scenarioErrorListA.innerHTML = '';
   if (scenarioErrorListB) scenarioErrorListB.innerHTML = '';
+  updateTimeFilterUiForRun('a');
+  updateTimeFilterUiForRun('b');
 
   resultsSection.style.display = 'block';
   resultsSection.classList.add('visible');
