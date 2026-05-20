@@ -20,6 +20,17 @@ const RUN_UI_CONFIG = {
     endpointDurationCanvasId: 'endpointDurationChartB',
     endpointRequestsChartKey: 'endpointRequestsB',
     endpointDurationChartKey: 'endpointDurationB'
+  },
+  c: {
+    suffix: 'C',
+    chartId: 'chartC',
+    legendId: 'scenarioLegendC',
+    endpointSectionId: 'endpointSectionC',
+    endpointListId: 'endpointListC',
+    endpointRequestsCanvasId: 'endpointRequestsChartC',
+    endpointDurationCanvasId: 'endpointDurationChartC',
+    endpointRequestsChartKey: 'endpointRequestsC',
+    endpointDurationChartKey: 'endpointDurationC'
   }
 };
 

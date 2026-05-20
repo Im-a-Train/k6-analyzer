@@ -311,6 +311,12 @@ header p {
   margin-bottom: 6px;
 }
 
+.time-filter-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .time-filter-title {
   font-size: 0.8em;
   color: var(--text-light);
@@ -323,6 +329,28 @@ header p {
   font-size: 0.8em;
   color: var(--text-dark);
   font-weight: 600;
+}
+
+.time-filter-reset {
+  border: 1px solid #c7d6e8;
+  border-radius: 999px;
+  background: #fff;
+  color: #12406f;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.time-filter-reset:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.time-filter-reset:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .time-filter-dual-slider {
@@ -412,8 +440,12 @@ header p {
   gap: 20px;
 }
 
-.run-compare-grid.compare-enabled {
+.run-compare-grid.compare-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.run-compare-grid.compare-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .metric-card {
@@ -489,6 +521,13 @@ header p {
 .charts-section h2 {
   margin-bottom: 20px;
   color: var(--text-dark);
+}
+
+.chart-interaction-hint {
+  margin-top: -10px;
+  margin-bottom: 16px;
+  color: var(--text-light);
+  font-size: 0.9em;
 }
 
 .metric-presets {
@@ -665,6 +704,21 @@ header p {
   margin-bottom: 16px;
 }
 
+.chart-container canvas {
+  cursor: crosshair;
+}
+
+.chart-brush-selection {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 102, 204, 0.16);
+  border-left: 1px solid rgba(0, 102, 204, 0.45);
+  border-right: 1px solid rgba(0, 102, 204, 0.45);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .chart-compare-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -684,8 +738,28 @@ header p {
   color: var(--text-dark);
 }
 
-.chart-compare-grid.compare-enabled {
+.chart-compare-grid.compare-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chart-compare-grid.compare-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.toolbar-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.toolbar-select select {
+  border: 1px solid #d1d5db;
+  border-radius: var(--border-radius);
+  padding: 8px 10px;
+  background: #fff;
+  color: var(--text-dark);
 }
 
 .scenario-error-card {
@@ -972,11 +1046,13 @@ header p {
     grid-template-columns: 1fr 1fr;
   }
 
-  .run-compare-grid.compare-enabled {
+  .run-compare-grid.compare-2,
+  .run-compare-grid.compare-3 {
     grid-template-columns: 1fr;
   }
 
-  .chart-compare-grid.compare-enabled {
+  .chart-compare-grid.compare-2,
+  .chart-compare-grid.compare-3 {
     grid-template-columns: 1fr;
   }
 

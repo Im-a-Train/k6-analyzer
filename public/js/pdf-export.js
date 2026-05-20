@@ -1,4 +1,5 @@
 const EXPORT_A4_WIDTH_PX = 794;
+const RUN_KEYS = ['a', 'b', 'c'];
 
 function formatHeaderDateTime(timestamp) {
   const d = new Date(timestamp);
@@ -83,9 +84,10 @@ function copyCanvasIntoClone(sourceRoot, cloneRoot) {
 }
 
 function buildRunExportSurface(runKey, runStore) {
-  const metricsPanelId = runKey === 'a' ? 'metricsPanelA' : 'metricsPanelB';
-  const chartsSectionId = runKey === 'a' ? 'chartsSectionA' : 'chartsSectionB';
-  const endpointSectionId = runKey === 'a' ? 'endpointSection' : 'endpointSectionB';
+  const suffix = runKey === 'a' ? 'A' : runKey.toUpperCase();
+  const metricsPanelId = `metricsPanel${suffix}`;
+  const chartsSectionId = `chartsSection${suffix}`;
+  const endpointSectionId = runKey === 'a' ? 'endpointSection' : `endpointSection${suffix}`;
 
   const sourceMetrics = document.getElementById(metricsPanelId);
   const sourceCharts = document.getElementById(chartsSectionId);
@@ -103,7 +105,7 @@ function buildRunExportSurface(runKey, runStore) {
   wrapper.style.color = '#0f172a';
   wrapper.style.overflow = 'hidden';
 
-  const runLabel = runKey === 'a' ? 'Run A' : 'Run B';
+  const runLabel = `Run ${runKey.toUpperCase()}`;
   const range = getRunDateRange(runStore[runKey]?.timeseries);
 
   const title = document.createElement('h1');
@@ -161,7 +163,7 @@ async function exportRunSurfaceToPdf(surface, fileName) {
 }
 
 export async function exportReportAsPdf(runStore) {
-  const runsToExport = ['a', 'b'].filter((runKey) => runStore[runKey]?.loaded);
+  const runsToExport = RUN_KEYS.filter((runKey) => runStore[runKey]?.loaded);
   if (runsToExport.length === 0) return;
 
   const host = document.createElement('div');

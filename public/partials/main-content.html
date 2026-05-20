@@ -15,9 +15,13 @@
     <div class="results-header">
       <h2 id="resultsMainTitle">Test Results</h2>
       <div class="results-toolbar">
-        <label class="toolbar-toggle" for="compareModeToggle">
-          <input type="checkbox" id="compareModeToggle">
-          <span>Compare A/B</span>
+        <label class="toolbar-select" for="compareModeSelect">
+          <span>Compare</span>
+          <select id="compareModeSelect">
+            <option value="1">Single Run</option>
+            <option value="2">Run A / B</option>
+            <option value="3">Run A / B / C</option>
+          </select>
         </label>
         <button class="btn btn-secondary" id="exportPdfBtn" type="button">Export PDF</button>
         <button class="btn btn-secondary" id="resetResultsBtn" type="button">Clear</button>
@@ -35,7 +39,10 @@
             <div class="time-filter" id="timeFilterWrapA">
               <div class="time-filter-label-row">
                 <span class="time-filter-title">Time Window</span>
-                <span class="time-filter-value" id="timeFilterValueA">Full range</span>
+                <div class="time-filter-actions">
+                  <span class="time-filter-value" id="timeFilterValueA">Full range</span>
+                  <button class="time-filter-reset" id="timeFilterResetA" type="button" aria-label="Reset time filter for Run A">Reset</button>
+                </div>
               </div>
               <div class="time-filter-dual-slider">
                 <div class="time-filter-track"></div>
@@ -64,7 +71,10 @@
             <div class="time-filter" id="timeFilterWrapB">
               <div class="time-filter-label-row">
                 <span class="time-filter-title">Time Window</span>
-                <span class="time-filter-value" id="timeFilterValueB">Full range</span>
+                <div class="time-filter-actions">
+                  <span class="time-filter-value" id="timeFilterValueB">Full range</span>
+                  <button class="time-filter-reset" id="timeFilterResetB" type="button" aria-label="Reset time filter for Run B">Reset</button>
+                </div>
               </div>
               <div class="time-filter-dual-slider">
                 <div class="time-filter-track"></div>
@@ -82,11 +92,44 @@
         </div>
         <div class="metrics-grid" id="metricsGridB"></div>
       </section>
+
+      <section class="run-metrics-panel hidden" id="metricsPanelC">
+        <div class="run-result-header" id="runResultHeaderC">
+          <div>
+            <h3 class="run-panel-title" id="runHeaderTitleC">Run C</h3>
+            <p class="run-panel-subtitle" id="runHeaderRangeC"></p>
+          </div>
+          <div class="run-header-actions">
+            <div class="time-filter" id="timeFilterWrapC">
+              <div class="time-filter-label-row">
+                <span class="time-filter-title">Time Window</span>
+                <div class="time-filter-actions">
+                  <span class="time-filter-value" id="timeFilterValueC">Full range</span>
+                  <button class="time-filter-reset" id="timeFilterResetC" type="button" aria-label="Reset time filter for Run C">Reset</button>
+                </div>
+              </div>
+              <div class="time-filter-dual-slider">
+                <div class="time-filter-track"></div>
+                <div class="time-filter-track-active" id="timeFilterActiveC"></div>
+                <input type="range" id="timeFilterStartC" class="time-filter-handle" aria-label="Run C time window start" disabled>
+                <input type="range" id="timeFilterEndC" class="time-filter-handle" aria-label="Run C time window end" disabled>
+              </div>
+            </div>
+            <button class="btn btn-secondary" id="uploadRunBtnC" type="button">Upload Run C</button>
+            <label class="toolbar-toggle hidden" id="coupleSettingsWrapC" for="coupleSettingsToggleC">
+              <input type="checkbox" id="coupleSettingsToggleC" checked>
+              <span>Couple Settings</span>
+            </label>
+          </div>
+        </div>
+        <div class="metrics-grid" id="metricsGridC"></div>
+      </section>
     </div>
 
     <div class="run-compare-grid" id="chartsCompareGrid">
       <section class="charts-section" id="chartsSectionA">
         <h2>Performance Charts (Run A)</h2>
+        <p class="chart-interaction-hint">Press, drag over the timeline, and release to filter this run by time window.</p>
 
         <div class="metric-presets" id="metricPresets"></div>
         <div class="metric-selectors" id="metricSelectors"></div>
@@ -120,6 +163,7 @@
 
       <section class="charts-section hidden" id="chartsSectionB">
         <h2>Performance Charts (Run B)</h2>
+        <p class="chart-interaction-hint">Press, drag over the timeline, and release to filter this run by time window.</p>
 
         <div class="metric-presets" id="metricPresetsB"></div>
         <div class="metric-selectors" id="metricSelectorsB"></div>
@@ -150,6 +194,40 @@
           <div class="scenario-error-list" id="scenarioErrorListB"></div>
         </article>
       </section>
+
+      <section class="charts-section hidden" id="chartsSectionC">
+        <h2>Performance Charts (Run C)</h2>
+        <p class="chart-interaction-hint">Press, drag over the timeline, and release to filter this run by time window.</p>
+
+        <div class="metric-presets" id="metricPresetsC"></div>
+        <div class="metric-selectors" id="metricSelectorsC"></div>
+
+        <div class="chart-controls">
+          <div class="chart-toggle" id="chartToggleC">
+            <button class="chart-type-btn active" data-view="overall">Overall</button>
+            <button class="chart-type-btn" data-view="byScenario">By Scenario</button>
+          </div>
+
+          <div class="granularity-control">
+            <label for="granularityInputC">Granularity</label>
+            <input type="text" id="granularityInputC" value="1s" aria-label="Chart granularity C" placeholder="e.g. 1s, 30s, 2m">
+            <button class="btn btn-secondary" id="applyGranularityBtnC" type="button">Apply</button>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartC"></canvas>
+        </div>
+        <div id="scenarioLegendC" class="scenario-legend hidden"></div>
+
+        <article class="scenario-error-card">
+          <div class="endpoint-list-header">
+            <h3>HTTP Errors By Scenario</h3>
+            <p>Shows aggregated failed HTTP requests grouped per scenario.</p>
+          </div>
+          <div class="scenario-error-list" id="scenarioErrorListC"></div>
+        </article>
+      </section>
     </div>
 
     <div class="run-compare-grid" id="endpointCompareGrid">
@@ -159,6 +237,10 @@
 
       <section class="endpoint-section hidden" id="endpointSectionB">
         <div id="endpointPanelContentB"></div>
+      </section>
+
+      <section class="endpoint-section hidden" id="endpointSectionC">
+        <div id="endpointPanelContentC"></div>
       </section>
     </div>
   </section>

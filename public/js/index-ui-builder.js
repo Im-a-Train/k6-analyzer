@@ -30,8 +30,14 @@ const METRIC_SELECTOR_DEFINITIONS = [
   { key: 'responseTimeAvg', label: 'Response Time (avg ms)', checked: false, defaultAxis: 'y1' }
 ];
 
+const RUN_SUFFIX = {
+  a: '',
+  b: 'B',
+  c: 'C'
+};
+
 function getSuffix(runKey) {
-  return runKey === 'a' ? '' : 'B';
+  return RUN_SUFFIX[runKey] || '';
 }
 
 function createElement(tag, className, text) {
@@ -59,7 +65,7 @@ function appendSortOptions(select) {
 
 function buildEndpointPanel(runKey) {
   const suffix = getSuffix(runKey);
-  const contentId = runKey === 'a' ? 'endpointPanelContentA' : 'endpointPanelContentB';
+  const contentId = `endpointPanelContent${runKey.toUpperCase()}`;
   const content = document.getElementById(contentId);
   if (!content) return;
 
@@ -106,7 +112,7 @@ function buildEndpointPanel(runKey) {
   const label = createElement('label', '', 'Order By');
   const select = createElement('select');
   select.id = `endpointSortSelect${suffix}`;
-  select.setAttribute('aria-label', runKey === 'a' ? 'Endpoint summary order' : 'Endpoint summary order for run b');
+  select.setAttribute('aria-label', runKey === 'a' ? 'Endpoint summary order' : `Endpoint summary order for run ${runKey}`);
   label.setAttribute('for', select.id);
   appendSortOptions(select);
   controls.appendChild(label);
@@ -154,7 +160,7 @@ function createMetricCard(runKey, definition) {
 }
 
 function renderMetricCards(runKey) {
-  const container = document.getElementById(runKey === 'a' ? 'metricsGridA' : 'metricsGridB');
+  const container = document.getElementById(`metricsGrid${runKey.toUpperCase()}`);
   if (!container) return;
 
   container.innerHTML = '';
@@ -164,7 +170,8 @@ function renderMetricCards(runKey) {
 }
 
 function renderMetricPresets(runKey) {
-  const container = document.getElementById(runKey === 'a' ? 'metricPresets' : 'metricPresetsB');
+  const suffix = getSuffix(runKey);
+  const container = document.getElementById(`metricPresets${suffix}`);
   if (!container) return;
 
   container.innerHTML = '';
@@ -177,7 +184,7 @@ function renderMetricPresets(runKey) {
 }
 
 function createAxisSelector(runKey, metricKey, defaultAxis) {
-  const suffixText = runKey === 'a' ? '' : ' B';
+  const suffixText = runKey === 'a' ? '' : ` ${runKey.toUpperCase()}`;
   const select = createElement('select', 'metric-axis-select');
   select.dataset.metric = metricKey;
   select.setAttribute('aria-label', `Axis for ${metricKey}${suffixText}`);
@@ -197,7 +204,8 @@ function createAxisSelector(runKey, metricKey, defaultAxis) {
 }
 
 function renderMetricSelectors(runKey) {
-  const container = document.getElementById(runKey === 'a' ? 'metricSelectors' : 'metricSelectorsB');
+  const suffix = getSuffix(runKey);
+  const container = document.getElementById(`metricSelectors${suffix}`);
   if (!container) return;
 
   container.innerHTML = '';
@@ -223,7 +231,7 @@ function renderMetricSelectors(runKey) {
 }
 
 function buildRunSections() {
-  ['a', 'b'].forEach((runKey) => {
+  ['a', 'b', 'c'].forEach((runKey) => {
     renderMetricCards(runKey);
     renderMetricPresets(runKey);
     renderMetricSelectors(runKey);

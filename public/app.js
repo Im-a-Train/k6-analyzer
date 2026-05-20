@@ -33,28 +33,42 @@ const progressPercent = document.getElementById('progressPercent');
 const progressText = document.getElementById('progressText');
 const rootContainer = document.querySelector('.container');
 
+const RUN_KEYS = ['a', 'b', 'c'];
+
 const uploadRunBtnA = document.getElementById('uploadRunBtnA');
 const uploadRunBtnB = document.getElementById('uploadRunBtnB');
-const compareModeToggle = document.getElementById('compareModeToggle');
+const uploadRunBtnC = document.getElementById('uploadRunBtnC');
+const compareModeSelect = document.getElementById('compareModeSelect');
 const coupleSettingsToggleA = document.getElementById('coupleSettingsToggleA');
 const coupleSettingsToggleB = document.getElementById('coupleSettingsToggleB');
+const coupleSettingsToggleC = document.getElementById('coupleSettingsToggleC');
 const coupleSettingsWrapA = document.getElementById('coupleSettingsWrapA');
 const coupleSettingsWrapB = document.getElementById('coupleSettingsWrapB');
+const coupleSettingsWrapC = document.getElementById('coupleSettingsWrapC');
 const resetResultsBtn = document.getElementById('resetResultsBtn');
 const exportPdfBtn = document.getElementById('exportPdfBtn');
 const resultsMainTitle = document.getElementById('resultsMainTitle');
 const runHeaderTitleA = document.getElementById('runHeaderTitleA');
 const runHeaderTitleB = document.getElementById('runHeaderTitleB');
+const runHeaderTitleC = document.getElementById('runHeaderTitleC');
 const runHeaderRangeA = document.getElementById('runHeaderRangeA');
 const runHeaderRangeB = document.getElementById('runHeaderRangeB');
+const runHeaderRangeC = document.getElementById('runHeaderRangeC');
 const timeFilterValueA = document.getElementById('timeFilterValueA');
 const timeFilterValueB = document.getElementById('timeFilterValueB');
+const timeFilterValueC = document.getElementById('timeFilterValueC');
 const timeFilterStartA = document.getElementById('timeFilterStartA');
 const timeFilterEndA = document.getElementById('timeFilterEndA');
 const timeFilterStartB = document.getElementById('timeFilterStartB');
 const timeFilterEndB = document.getElementById('timeFilterEndB');
+const timeFilterStartC = document.getElementById('timeFilterStartC');
+const timeFilterEndC = document.getElementById('timeFilterEndC');
 const timeFilterActiveA = document.getElementById('timeFilterActiveA');
 const timeFilterActiveB = document.getElementById('timeFilterActiveB');
+const timeFilterActiveC = document.getElementById('timeFilterActiveC');
+const timeFilterResetA = document.getElementById('timeFilterResetA');
+const timeFilterResetB = document.getElementById('timeFilterResetB');
+const timeFilterResetC = document.getElementById('timeFilterResetC');
 
 const granularityInput = document.getElementById('granularityInput');
 const applyGranularityBtn = document.getElementById('applyGranularityBtn');
@@ -64,19 +78,132 @@ const granularityInputB = document.getElementById('granularityInputB');
 const applyGranularityBtnB = document.getElementById('applyGranularityBtnB');
 const metricSelectorsB = document.getElementById('metricSelectorsB');
 const metricPresetsB = document.getElementById('metricPresetsB');
+const granularityInputC = document.getElementById('granularityInputC');
+const applyGranularityBtnC = document.getElementById('applyGranularityBtnC');
+const metricSelectorsC = document.getElementById('metricSelectorsC');
+const metricPresetsC = document.getElementById('metricPresetsC');
 const chartToggleA = document.getElementById('chartToggleA');
 const chartToggleB = document.getElementById('chartToggleB');
+const chartToggleC = document.getElementById('chartToggleC');
 const endpointSortSelect = document.getElementById('endpointSortSelect');
 const endpointSortSelectB = document.getElementById('endpointSortSelectB');
+const endpointSortSelectC = document.getElementById('endpointSortSelectC');
 const scenarioErrorListA = document.getElementById('scenarioErrorListA');
 const scenarioErrorListB = document.getElementById('scenarioErrorListB');
+const scenarioErrorListC = document.getElementById('scenarioErrorListC');
 
 const chartsCompareGrid = document.getElementById('chartsCompareGrid');
 const chartsSectionB = document.getElementById('chartsSectionB');
+const chartsSectionC = document.getElementById('chartsSectionC');
 const metricsPanelB = document.getElementById('metricsPanelB');
+const metricsPanelC = document.getElementById('metricsPanelC');
 const endpointSectionB = document.getElementById('endpointSectionB');
+const endpointSectionC = document.getElementById('endpointSectionC');
 const metricsCompareGrid = document.getElementById('metricsCompareGrid');
 const endpointCompareGrid = document.getElementById('endpointCompareGrid');
+
+const uploadRunButtons = {
+  a: uploadRunBtnA,
+  b: uploadRunBtnB,
+  c: uploadRunBtnC
+};
+
+const coupleSettingsToggles = {
+  a: coupleSettingsToggleA,
+  b: coupleSettingsToggleB,
+  c: coupleSettingsToggleC
+};
+
+const coupleSettingsWraps = {
+  a: coupleSettingsWrapA,
+  b: coupleSettingsWrapB,
+  c: coupleSettingsWrapC
+};
+
+const runHeaderTitles = {
+  a: runHeaderTitleA,
+  b: runHeaderTitleB,
+  c: runHeaderTitleC
+};
+
+const runHeaderRanges = {
+  a: runHeaderRangeA,
+  b: runHeaderRangeB,
+  c: runHeaderRangeC
+};
+
+const timeFilterElements = {
+  a: {
+    start: timeFilterStartA,
+    end: timeFilterEndA,
+    value: timeFilterValueA,
+    active: timeFilterActiveA,
+    reset: timeFilterResetA
+  },
+  b: {
+    start: timeFilterStartB,
+    end: timeFilterEndB,
+    value: timeFilterValueB,
+    active: timeFilterActiveB,
+    reset: timeFilterResetB
+  },
+  c: {
+    start: timeFilterStartC,
+    end: timeFilterEndC,
+    value: timeFilterValueC,
+    active: timeFilterActiveC,
+    reset: timeFilterResetC
+  }
+};
+
+const controlElementsByRun = {
+  a: {
+    granularityInput,
+    applyGranularityBtn,
+    metricSelectors,
+    metricPresets,
+    chartToggle: chartToggleA
+  },
+  b: {
+    granularityInput: granularityInputB,
+    applyGranularityBtn: applyGranularityBtnB,
+    metricSelectors: metricSelectorsB,
+    metricPresets: metricPresetsB,
+    chartToggle: chartToggleB
+  },
+  c: {
+    granularityInput: granularityInputC,
+    applyGranularityBtn: applyGranularityBtnC,
+    metricSelectors: metricSelectorsC,
+    metricPresets: metricPresetsC,
+    chartToggle: chartToggleC
+  }
+};
+
+const endpointSortSelects = {
+  a: endpointSortSelect,
+  b: endpointSortSelectB,
+  c: endpointSortSelectC
+};
+
+const scenarioErrorLists = {
+  a: scenarioErrorListA,
+  b: scenarioErrorListB,
+  c: scenarioErrorListC
+};
+
+const comparePanelsByRun = {
+  b: {
+    chartSection: chartsSectionB,
+    metricsPanel: metricsPanelB,
+    endpointSection: endpointSectionB
+  },
+  c: {
+    chartSection: chartsSectionC,
+    metricsPanel: metricsPanelC,
+    endpointSection: endpointSectionC
+  }
+};
 
 const METRIC_CONFIG = {
   vus: { label: 'Virtual Users', axis: 'y' },
@@ -120,33 +247,33 @@ function createEmptyRun() {
   };
 }
 
-const runStore = {
-  a: createEmptyRun(),
-  b: createEmptyRun()
-};
+const runStore = Object.fromEntries(RUN_KEYS.map((runKey) => [runKey, createEmptyRun()]));
 
-const settingsStore = {
-  a: createDefaultSettings(),
-  b: createDefaultSettings()
-};
+const settingsStore = Object.fromEntries(RUN_KEYS.map((runKey) => [runKey, createDefaultSettings()]));
 
 const appState = {
-  compareEnabled: false,
+  compareRunCount: 1,
   coupledSettings: true,
   settingsTarget: 'a',
-  endpointSort: {
-    a: 'requests',
-    b: 'requests'
-  }
+  endpointSort: Object.fromEntries(RUN_KEYS.map((runKey) => [runKey, 'requests']))
 };
 
 const charts = {
   a: null,
   b: null,
+  c: null,
   endpointRequestsA: null,
   endpointRequestsB: null,
+  endpointRequestsC: null,
   endpointDurationA: null,
-  endpointDurationB: null
+  endpointDurationB: null,
+  endpointDurationC: null
+};
+
+const chartBrushInteractions = {
+  a: null,
+  b: null,
+  c: null
 };
 
 let pendingUploadTarget = 'a';
@@ -165,24 +292,19 @@ function getSettingsTargetForControls() {
   return appState.coupledSettings ? 'a' : appState.settingsTarget;
 }
 
-function getControlElements(runKey) {
-  if (runKey === 'b') {
-    return {
-      granularityInput: granularityInputB,
-      applyGranularityBtn: applyGranularityBtnB,
-      metricSelectors: metricSelectorsB,
-      metricPresets: metricPresetsB,
-      chartToggle: chartToggleB
-    };
-  }
+function isRunVisible(runKey) {
+  if (runKey === 'a') return true;
+  if (runKey === 'b') return appState.compareRunCount >= 2;
+  if (runKey === 'c') return appState.compareRunCount >= 3;
+  return false;
+}
 
-  return {
-    granularityInput,
-    applyGranularityBtn,
-    metricSelectors,
-    metricPresets,
-    chartToggle: chartToggleA
-  };
+function getVisibleRunKeys() {
+  return RUN_KEYS.filter((runKey) => isRunVisible(runKey));
+}
+
+function getControlElements(runKey) {
+  return controlElementsByRun[runKey] || controlElementsByRun.a;
 }
 
 function getUploadTarget() {
@@ -190,8 +312,9 @@ function getUploadTarget() {
 }
 
 function getPrimaryRunKey() {
-  if (runStore.a.loaded) return 'a';
-  if (runStore.b.loaded) return 'b';
+  for (const runKey of RUN_KEYS) {
+    if (runStore[runKey].loaded) return runKey;
+  }
   return 'a';
 }
 
@@ -240,19 +363,15 @@ function bindUploadEvents() {
     });
   }
 
-  if (uploadRunBtnA) {
-    uploadRunBtnA.addEventListener('click', () => {
-      pendingUploadTarget = 'a';
-      fileInput.click();
-    });
-  }
+  RUN_KEYS.forEach((runKey) => {
+    const button = uploadRunButtons[runKey];
+    if (!button) return;
 
-  if (uploadRunBtnB) {
-    uploadRunBtnB.addEventListener('click', () => {
-      pendingUploadTarget = 'b';
+    button.addEventListener('click', () => {
+      pendingUploadTarget = runKey;
       fileInput.click();
     });
-  }
+  });
 
   if (resetResultsBtn) {
     resetResultsBtn.addEventListener('click', resetApplicationState);
@@ -266,16 +385,18 @@ function bindUploadEvents() {
 }
 
 function applySettingsToTargets(mutator, sourceRunKey = 'a') {
-  const targets = appState.coupledSettings ? ['a', 'b'] : [sourceRunKey];
+  const targets = appState.coupledSettings ? RUN_KEYS : [sourceRunKey];
   targets.forEach((runKey) => mutator(settingsStore[runKey]));
 
   if (appState.coupledSettings) {
-    settingsStore.b = cloneSettings(settingsStore.a);
+    RUN_KEYS.filter((runKey) => runKey !== 'a').forEach((runKey) => {
+      settingsStore[runKey] = cloneSettings(settingsStore.a);
+    });
   }
 }
 
 function bindControlEvents() {
-  ['a', 'b'].forEach((runKey) => {
+  RUN_KEYS.forEach((runKey) => {
     const controls = getControlElements(runKey);
 
     if (controls.chartToggle) {
@@ -352,9 +473,10 @@ function bindControlEvents() {
     }
   });
 
-  if (compareModeToggle) {
-    compareModeToggle.addEventListener('change', () => {
-      appState.compareEnabled = compareModeToggle.checked;
+  if (compareModeSelect) {
+    compareModeSelect.addEventListener('change', () => {
+      const nextCount = Number(compareModeSelect.value);
+      appState.compareRunCount = [1, 2, 3].includes(nextCount) ? nextCount : 1;
       renderAll();
     });
   }
@@ -362,42 +484,33 @@ function bindControlEvents() {
   const onCoupleToggleChange = (checked) => {
     appState.coupledSettings = checked;
     if (appState.coupledSettings) {
-      settingsStore.b = cloneSettings(settingsStore.a);
+      RUN_KEYS.filter((runKey) => runKey !== 'a').forEach((runKey) => {
+        settingsStore[runKey] = cloneSettings(settingsStore.a);
+      });
     }
     syncControlsFromActiveSettings();
     updateToolbarState();
     renderAll();
   };
 
-  if (coupleSettingsToggleA) {
-    coupleSettingsToggleA.addEventListener('change', () => {
-      onCoupleToggleChange(coupleSettingsToggleA.checked);
-    });
-  }
+  RUN_KEYS.forEach((runKey) => {
+    const toggle = coupleSettingsToggles[runKey];
+    if (toggle) {
+      toggle.addEventListener('change', () => {
+        onCoupleToggleChange(toggle.checked);
+      });
+    }
 
-  if (coupleSettingsToggleB) {
-    coupleSettingsToggleB.addEventListener('change', () => {
-      onCoupleToggleChange(coupleSettingsToggleB.checked);
-    });
-  }
+    const sortSelect = endpointSortSelects[runKey];
+    if (sortSelect) {
+      sortSelect.addEventListener('change', () => {
+        appState.endpointSort[runKey] = sortSelect.value;
+        renderEndpointSectionForRun(runKey);
+      });
+    }
 
-  if (endpointSortSelect) {
-    endpointSortSelect.addEventListener('change', () => {
-      appState.endpointSort.a = endpointSortSelect.value;
-      renderEndpointSectionForRun('a');
-    });
-  }
-
-  if (endpointSortSelectB) {
-    endpointSortSelectB.addEventListener('change', () => {
-      appState.endpointSort.b = endpointSortSelectB.value;
-      renderEndpointSectionForRun('b');
-    });
-  }
-
-  ['a', 'b'].forEach((runKey) => {
-    const { start, end } = getTimeFilterElements(runKey);
-    if (!start || !end) return;
+    const { start, end, reset } = getTimeFilterElements(runKey);
+    if (!start || !end || !reset) return;
 
     const onRangeInput = (source) => {
       const run = runStore[runKey];
@@ -428,6 +541,7 @@ function bindControlEvents() {
 
     start.addEventListener('input', () => onRangeInput('start'));
     end.addEventListener('input', () => onRangeInput('end'));
+    reset.addEventListener('click', () => resetTimeFilterForRun(runKey));
   });
 }
 
@@ -444,21 +558,18 @@ function formatHeaderDateTime(timestamp) {
 }
 
 function getTimeFilterElements(runKey) {
-  if (runKey === 'b') {
-    return {
-      start: timeFilterStartB,
-      end: timeFilterEndB,
-      value: timeFilterValueB,
-      active: timeFilterActiveB
-    };
-  }
+  return timeFilterElements[runKey] || timeFilterElements.a;
+}
 
-  return {
-    start: timeFilterStartA,
-    end: timeFilterEndA,
-    value: timeFilterValueA,
-    active: timeFilterActiveA
-  };
+function resetTimeFilterForRun(runKey) {
+  const run = runStore[runKey];
+  if (!run?.timeFilter) return;
+  run.timeFilter.startTs = run.timeFilter.minTs;
+  run.timeFilter.endTs = run.timeFilter.maxTs;
+  invalidateFilterCache(runKey);
+  updateTimeFilterUiForRun(runKey);
+  hideError();
+  renderAll();
 }
 
 function getRunBoundsFromTimeseries(timeseries) {
@@ -523,14 +634,15 @@ function isTimeFilterActive(runKey) {
 
 function updateTimeFilterUiForRun(runKey) {
   const run = runStore[runKey];
-  const { start, end, value, active } = getTimeFilterElements(runKey);
-  if (!start || !end || !value || !active) return;
+  const { start, end, value, active, reset } = getTimeFilterElements(runKey);
+  if (!start || !end || !value || !active || !reset) return;
 
   const filter = run.timeFilter;
   if (!run.loaded || !filter) {
     start.disabled = true;
     end.disabled = true;
     value.textContent = 'No data';
+    reset.disabled = true;
     active.style.left = '0%';
     active.style.width = '100%';
     return;
@@ -558,6 +670,7 @@ function updateTimeFilterUiForRun(runKey) {
   value.textContent = isTimeFilterActive(runKey)
     ? formatDateRangeText(filter.startTs, filter.endTs)
     : 'Full range';
+  reset.disabled = !isTimeFilterActive(runKey);
 }
 
 function filterSeriesPointsByTime(points, filter) {
@@ -688,34 +801,54 @@ function getRunDisplayedDateRange(runKey) {
   return formatDateRangeText(run.timeFilter.startTs, run.timeFilter.endTs);
 }
 
-function updateResultsHeaderText(showB) {
-  const fullRangeA = getRunDateRange('a');
-  const fullRangeB = getRunDateRange('b');
-  const shownRangeA = getRunDisplayedDateRange('a');
-  const shownRangeB = getRunDisplayedDateRange('b');
-  const rangeA = isTimeFilterActive('a') && shownRangeA && fullRangeA
-    ? `${shownRangeA} (filtered)`
-    : fullRangeA;
-  const rangeB = isTimeFilterActive('b') && shownRangeB && fullRangeB
-    ? `${shownRangeB} (filtered)`
-    : fullRangeB;
+function updateResultsHeaderText(visibleRunKeys) {
+  const rangeByRun = Object.fromEntries(RUN_KEYS.map((runKey) => {
+    const fullRange = getRunDateRange(runKey);
+    const shownRange = getRunDisplayedDateRange(runKey);
+    const displayRange = isTimeFilterActive(runKey) && shownRange && fullRange
+      ? `${shownRange} (filtered)`
+      : fullRange;
 
-  if (!showB) {
+    return [runKey, displayRange || ''];
+  }));
+
+  if (visibleRunKeys.length <= 1) {
+    const primaryRunKey = getPrimaryRunKey();
+    const range = rangeByRun[primaryRunKey];
+
     if (resultsMainTitle) {
-      resultsMainTitle.textContent = rangeA ? `Test Results ${rangeA}` : 'Test Results';
+      resultsMainTitle.textContent = range ? `Test Results ${range}` : 'Test Results';
     }
-    if (runHeaderTitleA) runHeaderTitleA.textContent = rangeA ? `Test Results ${rangeA}` : 'Test Results';
-    if (runHeaderRangeA) runHeaderRangeA.textContent = '';
-    if (runHeaderTitleB) runHeaderTitleB.textContent = 'Run B';
-    if (runHeaderRangeB) runHeaderRangeB.textContent = rangeB || '';
+
+    RUN_KEYS.forEach((runKey) => {
+      const title = runHeaderTitles[runKey];
+      const rangeEl = runHeaderRanges[runKey];
+      if (!title || !rangeEl) return;
+
+      if (runKey === primaryRunKey) {
+        title.textContent = range ? `Test Results ${range}` : 'Test Results';
+        rangeEl.textContent = '';
+        return;
+      }
+
+      title.textContent = `Run ${runKey.toUpperCase()}`;
+      rangeEl.textContent = rangeByRun[runKey];
+    });
     return;
   }
 
-  if (resultsMainTitle) resultsMainTitle.textContent = 'Run A | Run B';
-  if (runHeaderTitleA) runHeaderTitleA.textContent = 'Run A';
-  if (runHeaderTitleB) runHeaderTitleB.textContent = 'Run B';
-  if (runHeaderRangeA) runHeaderRangeA.textContent = rangeA || '';
-  if (runHeaderRangeB) runHeaderRangeB.textContent = rangeB || '';
+  if (resultsMainTitle) {
+    resultsMainTitle.textContent = visibleRunKeys.map((runKey) => `Run ${runKey.toUpperCase()}`).join(' | ');
+  }
+
+  RUN_KEYS.forEach((runKey) => {
+    const title = runHeaderTitles[runKey];
+    const rangeEl = runHeaderRanges[runKey];
+    if (!title || !rangeEl) return;
+
+    title.textContent = `Run ${runKey.toUpperCase()}`;
+    rangeEl.textContent = rangeByRun[runKey];
+  });
 }
 
 function getSelectedMetricValues(runKey) {
@@ -765,22 +898,28 @@ function syncControlsForRun(runKey) {
 }
 
 function syncControlsFromActiveSettings() {
-  syncControlsForRun('a');
-  syncControlsForRun('b');
+  RUN_KEYS.forEach((runKey) => syncControlsForRun(runKey));
   updateToolbarState();
 }
 
 function updateToolbarState() {
-  if (coupleSettingsWrapA) coupleSettingsWrapA.classList.toggle('hidden', !appState.compareEnabled);
-  if (coupleSettingsWrapB) coupleSettingsWrapB.classList.toggle('hidden', !appState.compareEnabled);
+  const compareEnabled = appState.compareRunCount > 1;
+  RUN_KEYS.forEach((runKey) => {
+    const wrap = coupleSettingsWraps[runKey];
+    if (wrap) wrap.classList.toggle('hidden', !compareEnabled || !isRunVisible(runKey));
+  });
 
-  if (!appState.compareEnabled) {
+  if (!compareEnabled) {
     appState.coupledSettings = true;
-    if (coupleSettingsToggleA) coupleSettingsToggleA.checked = true;
-    if (coupleSettingsToggleB) coupleSettingsToggleB.checked = true;
+    RUN_KEYS.forEach((runKey) => {
+      const toggle = coupleSettingsToggles[runKey];
+      if (toggle) toggle.checked = true;
+    });
   } else {
-    if (coupleSettingsToggleA) coupleSettingsToggleA.checked = appState.coupledSettings;
-    if (coupleSettingsToggleB) coupleSettingsToggleB.checked = appState.coupledSettings;
+    RUN_KEYS.forEach((runKey) => {
+      const toggle = coupleSettingsToggles[runKey];
+      if (toggle) toggle.checked = appState.coupledSettings;
+    });
   }
 }
 
@@ -836,9 +975,9 @@ async function loadResultsForRun(runKey) {
   ensureRunTimeFilter(runKey);
   updateTimeFilterUiForRun(runKey);
 
-  if (!runStore.a.loaded && runStore.b.loaded) {
-    // Keep controls sensible if B is uploaded first.
-    appState.settingsTarget = 'b';
+  if (!runStore.a.loaded && runKey !== 'a') {
+    // Keep controls sensible if a secondary run is uploaded first.
+    appState.settingsTarget = runKey;
   }
 
   if (!resultsSection.classList.contains('visible')) {
@@ -878,43 +1017,46 @@ function computeAxisMaxValues(runKey, settings) {
 
 function renderAll() {
   updateCompareVisibility();
-  updateTimeFilterUiForRun('a');
-  updateTimeFilterUiForRun('b');
+  RUN_KEYS.forEach((runKey) => updateTimeFilterUiForRun(runKey));
 
-  const coupledCompare = appState.coupledSettings && appState.compareEnabled
-    && runStore.a.loaded && runStore.b.loaded;
+  const visibleLoadedRunKeys = getVisibleRunKeys().filter((runKey) => runStore[runKey].loaded);
+  const coupledCompare = appState.coupledSettings && visibleLoadedRunKeys.length > 1;
 
   let sharedScales = null;
   if (coupledCompare) {
-    const aMax = computeAxisMaxValues('a', settingsStore.a);
-    const bMax = computeAxisMaxValues('b', settingsStore.b);
+    const maxima = visibleLoadedRunKeys.map((runKey) => computeAxisMaxValues(runKey, settingsStore[runKey]));
     const pad = (v) => (v ? v * 1.05 : undefined);
     sharedScales = {
-      yMax: pad(Math.max(aMax.yMax, bMax.yMax) || undefined),
-      y1Max: pad(Math.max(aMax.y1Max, bMax.y1Max) || undefined)
+      yMax: pad(Math.max(...maxima.map((value) => value.yMax || 0)) || undefined),
+      y1Max: pad(Math.max(...maxima.map((value) => value.y1Max || 0)) || undefined)
     };
   }
 
-  renderChartForRun('a', sharedScales);
-  renderChartForRun('b', sharedScales);
+  RUN_KEYS.forEach((runKey) => renderChartForRun(runKey, sharedScales));
   renderScenarioErrorSummary();
-  displayMetricsForRun('a');
-  displayMetricsForRun('b');
-  renderEndpointSectionForRun('a');
-  renderEndpointSectionForRun('b');
+  RUN_KEYS.forEach((runKey) => displayMetricsForRun(runKey));
+  RUN_KEYS.forEach((runKey) => renderEndpointSectionForRun(runKey));
 }
 
 function updateCompareVisibility() {
-  const showB = appState.compareEnabled;
+  const visibleRunKeys = getVisibleRunKeys();
+  const compareClass = visibleRunKeys.length >= 3 ? 'compare-3' : visibleRunKeys.length === 2 ? 'compare-2' : null;
 
-  if (chartsSectionB) chartsSectionB.classList.toggle('hidden', !showB);
-  if (metricsPanelB) metricsPanelB.classList.toggle('hidden', !showB);
-  if (endpointSectionB) endpointSectionB.classList.toggle('hidden', !showB);
-  if (chartsCompareGrid) chartsCompareGrid.classList.toggle('compare-enabled', showB);
-  if (metricsCompareGrid) metricsCompareGrid.classList.toggle('compare-enabled', showB);
-  if (endpointCompareGrid) endpointCompareGrid.classList.toggle('compare-enabled', showB);
-  if (rootContainer) rootContainer.classList.toggle('compare-full', showB);
-  updateResultsHeaderText(showB);
+  Object.entries(comparePanelsByRun).forEach(([runKey, sections]) => {
+    const shouldShow = isRunVisible(runKey);
+    Object.values(sections).forEach((element) => {
+      if (element) element.classList.toggle('hidden', !shouldShow);
+    });
+  });
+
+  [chartsCompareGrid, metricsCompareGrid, endpointCompareGrid].forEach((grid) => {
+    if (!grid) return;
+    grid.classList.remove('compare-2', 'compare-3');
+    if (compareClass) grid.classList.add(compareClass);
+  });
+
+  if (rootContainer) rootContainer.classList.toggle('compare-full', visibleRunKeys.length > 1);
+  updateResultsHeaderText(visibleRunKeys);
 }
 
 function applyGranularity(runKey = 'a') {
@@ -937,6 +1079,7 @@ function applyGranularity(runKey = 'a') {
   if (appState.coupledSettings) {
     if (granularityInput) granularityInput.value = normalized;
     if (granularityInputB) granularityInputB.value = normalized;
+    if (granularityInputC) granularityInputC.value = normalized;
   } else {
     controls.granularityInput.value = normalized;
   }
@@ -952,6 +1095,125 @@ function getAxisTitle(settings, metricKeys, axisId) {
   return labels.join(', ');
 }
 
+function detachChartBrushInteraction(runKey) {
+  const interaction = chartBrushInteractions[runKey];
+  if (!interaction) return;
+  if (typeof interaction.cleanup === 'function') {
+    interaction.cleanup();
+  }
+  chartBrushInteractions[runKey] = null;
+}
+
+function attachChartBrushInteraction(runKey, chartInstance, timestamps) {
+  detachChartBrushInteraction(runKey);
+
+  if (!chartInstance || !Array.isArray(timestamps) || timestamps.length < 2) {
+    return;
+  }
+
+  const canvas = chartInstance.canvas;
+  const parent = canvas?.parentElement;
+  if (!canvas || !parent) return;
+
+  const brush = document.createElement('div');
+  brush.className = 'chart-brush-selection hidden';
+  parent.appendChild(brush);
+
+  let isDragging = false;
+  let startX = 0;
+  let currentX = 0;
+
+  const getCanvasX = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    return Math.max(0, Math.min(rect.width, event.clientX - rect.left));
+  };
+
+  const updateBrush = () => {
+    const left = Math.min(startX, currentX);
+    const right = Math.max(startX, currentX);
+    brush.style.left = `${left}px`;
+    brush.style.width = `${Math.max(0, right - left)}px`;
+  };
+
+  const applyBrushSelection = () => {
+    const dragDistance = Math.abs(currentX - startX);
+    brush.classList.add('hidden');
+
+    if (dragDistance < 8) return;
+
+    const xScale = chartInstance.scales?.x;
+    if (!xScale) return;
+
+    const leftPx = Math.min(startX, currentX);
+    const rightPx = Math.max(startX, currentX);
+
+    const rawStartIndex = Number(xScale.getValueForPixel(leftPx));
+    const rawEndIndex = Number(xScale.getValueForPixel(rightPx));
+
+    if (!Number.isFinite(rawStartIndex) || !Number.isFinite(rawEndIndex)) return;
+
+    const startIndex = Math.max(0, Math.min(timestamps.length - 1, Math.floor(rawStartIndex)));
+    const endIndex = Math.max(0, Math.min(timestamps.length - 1, Math.ceil(rawEndIndex)));
+
+    const run = runStore[runKey];
+    if (!run?.timeFilter) return;
+
+    run.timeFilter.startTs = timestamps[Math.min(startIndex, endIndex)];
+    run.timeFilter.endTs = timestamps[Math.max(startIndex, endIndex)];
+    invalidateFilterCache(runKey);
+    updateTimeFilterUiForRun(runKey);
+    hideError();
+    renderAll();
+  };
+
+  const onMouseDown = (event) => {
+    if (event.button !== 0) return;
+    isDragging = true;
+    startX = getCanvasX(event);
+    currentX = startX;
+    brush.classList.remove('hidden');
+    updateBrush();
+  };
+
+  const onMouseMove = (event) => {
+    if (!isDragging) return;
+    currentX = getCanvasX(event);
+    updateBrush();
+  };
+
+  const onMouseUp = () => {
+    if (!isDragging) return;
+    isDragging = false;
+    applyBrushSelection();
+  };
+
+  const onWindowBlur = () => {
+    isDragging = false;
+    brush.classList.add('hidden');
+  };
+
+  const onDoubleClick = () => {
+    resetTimeFilterForRun(runKey);
+  };
+
+  canvas.addEventListener('mousedown', onMouseDown);
+  canvas.addEventListener('dblclick', onDoubleClick);
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('blur', onWindowBlur);
+
+  chartBrushInteractions[runKey] = {
+    cleanup: () => {
+      canvas.removeEventListener('mousedown', onMouseDown);
+      canvas.removeEventListener('dblclick', onDoubleClick);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener('blur', onWindowBlur);
+      brush.remove();
+    }
+  };
+}
+
 function renderChartForRun(runKey, sharedScales = null) {
   const run = runStore[runKey];
   const timeseries = getFilteredTimeseriesForRun(runKey);
@@ -963,6 +1225,7 @@ function renderChartForRun(runKey, sharedScales = null) {
     charts[runKey].destroy();
     charts[runKey] = null;
   }
+  detachChartBrushInteraction(runKey);
 
   if (!run.loaded || !timeseries) return;
 
@@ -975,6 +1238,7 @@ function renderChartForRun(runKey, sharedScales = null) {
 
   let labels = [];
   let datasets = [];
+  let sortedTimestamps = [];
   let usesSecondaryAxis = false;
   let lineIndex = 0;
   const legendContainer = document.getElementById(legendId);
@@ -991,7 +1255,7 @@ function renderChartForRun(runKey, sharedScales = null) {
       collectSortedTimestampsFromSeries(series).forEach((ts) => allTimestamps.add(ts));
     });
 
-    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+    sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
     labels = sortedTimestamps.map((ts) => formatTimeLabel(ts));
 
     metricKeys.forEach((metricKey) => {
@@ -1018,7 +1282,7 @@ function renderChartForRun(runKey, sharedScales = null) {
     const scenarioColors = generateColors(scenarios.length);
     const scenarioColorByName = new Map(scenarios.map((scenario, index) => [scenario, scenarioColors[index].border]));
 
-    const sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
+    sortedTimestamps = Array.from(allTimestamps).sort((a, b) => a - b);
     labels = sortedTimestamps.map((ts) => formatTimeLabel(ts));
 
     metricKeys.forEach((metricKey) => {
@@ -1108,6 +1372,8 @@ function renderChartForRun(runKey, sharedScales = null) {
       }
     }
   });
+
+  attachChartBrushInteraction(runKey, charts[runKey], sortedTimestamps);
 }
 
 function updateScenarioLegend(container, scenarios, colors) {
@@ -1153,8 +1419,7 @@ function getScenarioFailedTotals(runKey) {
 }
 
 function renderScenarioErrorSummary() {
-  renderScenarioErrorListForRun('a', scenarioErrorListA);
-  renderScenarioErrorListForRun('b', scenarioErrorListB);
+  RUN_KEYS.forEach((runKey) => renderScenarioErrorListForRun(runKey, scenarioErrorLists[runKey]));
 }
 
 function renderScenarioErrorListForRun(runKey, container) {
@@ -1222,14 +1487,17 @@ function renderEndpointSectionForRun(runKey) {
   if (!endpointSection || !endpointList) return;
 
   if (!endpointData || !endpointData.endpoints || endpointData.endpoints.length === 0) {
-    endpointSection.style.display = runKey === 'a' ? 'none' : endpointSection.style.display;
+    endpointSection.style.display = 'none';
     endpointList.innerHTML = '';
     destroyEndpointCharts(runKey);
     return;
   }
 
-  if (runKey === 'a' || (appState.compareEnabled && runStore.b.loaded)) {
+  if (isRunVisible(runKey)) {
     endpointSection.style.display = 'block';
+  } else {
+    endpointSection.style.display = 'none';
+    return;
   }
 
   renderEndpointRequestsChart(runKey);
@@ -1581,22 +1849,23 @@ function hideError() {
 }
 
 function resetApplicationState() {
-  runStore.a = createEmptyRun();
-  runStore.b = createEmptyRun();
+  RUN_KEYS.forEach((runKey) => {
+    runStore[runKey] = createEmptyRun();
+    settingsStore[runKey] = createDefaultSettings();
+  });
 
-  settingsStore.a = createDefaultSettings();
-  settingsStore.b = createDefaultSettings();
-
-  appState.compareEnabled = false;
+  appState.compareRunCount = 1;
   appState.coupledSettings = true;
   appState.settingsTarget = 'a';
-  appState.endpointSort = { a: 'requests', b: 'requests' };
+  appState.endpointSort = Object.fromEntries(RUN_KEYS.map((runKey) => [runKey, 'requests']));
 
-  if (compareModeToggle) compareModeToggle.checked = false;
-  if (coupleSettingsToggleA) coupleSettingsToggleA.checked = true;
-  if (coupleSettingsToggleB) coupleSettingsToggleB.checked = true;
-  if (endpointSortSelect) endpointSortSelect.value = 'requests';
-  if (endpointSortSelectB) endpointSortSelectB.value = 'requests';
+  if (compareModeSelect) compareModeSelect.value = '1';
+  RUN_KEYS.forEach((runKey) => {
+    const coupleToggle = coupleSettingsToggles[runKey];
+    const sortSelect = endpointSortSelects[runKey];
+    if (coupleToggle) coupleToggle.checked = true;
+    if (sortSelect) sortSelect.value = 'requests';
+  });
 
   setUploadTargetControls('a');
 
@@ -1606,11 +1875,13 @@ function resetApplicationState() {
       charts[key] = null;
     }
   });
+  RUN_KEYS.forEach((runKey) => detachChartBrushInteraction(runKey));
 
-  if (scenarioErrorListA) scenarioErrorListA.innerHTML = '';
-  if (scenarioErrorListB) scenarioErrorListB.innerHTML = '';
-  updateTimeFilterUiForRun('a');
-  updateTimeFilterUiForRun('b');
+  RUN_KEYS.forEach((runKey) => {
+    const scenarioList = scenarioErrorLists[runKey];
+    if (scenarioList) scenarioList.innerHTML = '';
+    updateTimeFilterUiForRun(runKey);
+  });
 
   resultsSection.style.display = 'block';
   resultsSection.classList.add('visible');
